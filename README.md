@@ -4,7 +4,7 @@
 
 ## 1. Project Overview
 
-T1D-DOSIS is a lean, modular system designed to calculate and optimize personalized therapeutic factors (Insulin Sensitivity Factor – ISF, Carbohydrate Factor) from historical glucose and activity data. The goal: To noticeably improve the lives of people with Type 1 Diabetes (T1D) by making insulin injections more precise and the administration of glucose (e.g., for hypoglycemia) safer and more dosed. Through data-based predictions and adjustments, T1D-DOSIS reduces uncertainties in everyday life, minimizes complications, and promotes greater autonomy – without real-time dosing, but as a smart calibration aid.
+T1D-DOSIS is a lean, modular system designed to suggest optimized insulin and glucose (e.g., for hypoglycemia) administrations based on historical glucose and activity data. Therapeutic factors (e.g., Insulin Sensitivity Factor – ISF, Carbohydrate Factor) are largely internal quantities derived as a byproduct of this process and can be used or exported elsewhere (e.g., for integration with APS systems). The goal: To noticeably improve the lives of people with Type 1 Diabetes (T1D) by making insulin injections more precise and the administration of glucose safer and more dosed. Through data-based predictions and adjustments, T1D-DOSIS reduces uncertainties in everyday life, minimizes complications, and promotes greater autonomy – without real-time dosing, but as a smart calibration aid.
 
 The project is divided into two main components:
 
@@ -74,7 +74,7 @@ The design of the **Glucose Broadcast Receiver** was inspired by GlucoDataHandle
 
 ## 5. Positioning: Semi-Automatic Control System and Synergy
 
-T1D-DOSIS positions itself as a **Semi-Automatic Control System with Counter-Regulation** that optimizes the efficiency of therapeutic factors without controlling insulin delivery in real-time. It improves the daily lives of T1D individuals by making insulin injections more precise (through adjusted ISF/CarbFactor) and hypo-management safer (e.g., via predictions for glucose dosing).
+T1D-DOSIS positions itself as a **Semi-Automatic Control System with Counter-Regulation** that suggests optimized insulin and glucose doses without controlling insulin delivery in real-time. Therapeutic factors are computed internally as supporting metrics. It improves the daily lives of T1D individuals by making insulin injections more precise and hypo-management safer (e.g., via predictions for glucose dosing).
 
 ### 5.1 Distinction from Fully Automatic Closed-Loop Systems (DIY-APS)
 
@@ -93,9 +93,9 @@ T1D-DOSIS serves as an **upstream optimization stage** for these systems or for 
 
 1. **Goal of APS:** Short-term glucose control, based on the ISF and CarbFactor values *set by the user*.
 
-2. **Goal of T1D-DOSIS:** The optimization and updating of the **underlying constants** (ISF, CarbFactor), ensuring that the *basis* for control is more precise. Additionally: Precise suggestions for insulin doses and glucose administrations to manage hypos more safely.
+2. **Goal of T1D-DOSIS:** To suggest precise insulin and glucose doses, with therapeutic factors (ISF, CarbFactor) as largely internal quantities derived in the process. These factors can be exported or used elsewhere as a byproduct.
 
-**Synergy:** T1D-DOSIS improves the accuracy of the factors that form the basis for any dosing calculation or APS system. The optimized ISF or CarbFactor value calculated by the Julia backend could, for example, be adopted by the user in AndroidAPS or Loop once a week.
+**Synergy:** T1D-DOSIS provides actionable dose suggestions while generating reusable therapeutic factors that improve the basis for any dosing calculation or APS system. For example, the computed ISF or CarbFactor could be adopted by the user in AndroidAPS or Loop once a week.
 
 ### 5.3 Further Synergies in the Open-Source Ecosystem
 
