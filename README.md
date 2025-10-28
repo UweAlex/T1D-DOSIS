@@ -1,100 +1,97 @@
-# T1D-DOSIS (Type 1 Diabetes - Decision Optimization Support and Information System)
+# T1D-DOSIS: Computer-Aided Insulin Injection
 
-## Table of Contents
+**AI-Supported Optimization of Therapeutic Factors for Type 1 Diabetics**
 
-* [Overview](#overview)
-* [I. Vision and Objectives](#i-vision-and-objectives)
-* [II. Methodology and Architecture](#ii-methodology-and-architecture)
-  * [II.I Data Protocol (Cloud Communication)](#ii.i-data-protocol-cloud-communication)
-  * [II.II UX Principles and Transparency](#ii.ii-ux-principles-and-transparency)
-* [III. Phases and Roadmap](#iii-phases-and-roadmap)
-  * [Key Tasks in Phase 3 (App Core Logic)](#key-tasks-in-phase-3-app-core-logic)
-* [IV. Technical Components (Kotlin / Julia)](#iv-technical-components-kotlin--julia)
-* [V. Legal Strategy and Disclaimer (Highest Warning Level)](#v-legal-strategy-and-disclaimer-highest-warning-level)
-* [VI. License](#vi-license)
+## 1. Project Overview
 
-***
+T1D-DOSIS is a lean, modular system designed to calculate and optimize personalized therapeutic factors (Insulin Sensitivity Factor, Carbohydrate Factor) from historical glucose and activity data.
 
-## Overview
+The project is divided into two main components:
 
-**T1D-DOSIS** is an open-source project aimed at developing a **Computer-Aided Decision Support System (DSS)**, whose ultimate goal is to significantly enhance the quality of life and safety for individuals with T1D. **This is an open-source prototype intended primarily for private development and as an auditable source of inspiration for future certified medical devices.** The app **reads live glucose data from Juggluco, performs intelligent analysis of historical values, and generates improved safety warnings in the event of a significant deviation.**
-
-The app is primarily designed as a **secondary safety check** ("Second Opinion") to validate human dosing decisions and detect potential errors based on data-driven patterns.
-
-## I. Vision and Objectives
-
-The central vision of T1D-DOSIS is to significantly improve the **quality of life** and safety of individuals with T1D through enhanced control.
-
-| **Metric** | **Goal** | **Rationale** | 
+| Component | Language/Technology | Task | 
  | ----- | ----- | ----- | 
-| **Safety** | Reduce Hypo-Risk by 50% | Especially crucial at night. | 
-| **Quality of Life** | Increase sleep without wake-up calls to >90% of nights | The most important qualitative goal. | 
-| **Frequency** | Reduce manual factor corrections by users by 70% | Maximum transparency and automated alignment. | 
-| **Integration** | Handover and integration of core logic into xDrip+/Juggluco | Maximum reach and manpower for the ultimate goal. | 
+| **Client/Data Acquisition** | Kotlin (Android) | Receives glucose broadcasts (e.g., from Juggluco), stores data (Room DB), and manages IPC (Inter-Process Communication) with the backend. | 
+| **Analysis/Optimization** | Julia (Backend) | Performs complex time series analysis, Machine Learning, and optimization of therapeutic factors. Operates in isolation via file protocols. | 
 
-## II. Methodology and Architecture
+## 2. Development Status
 
-The system follows a strict separation between data acquisition (Android/Kotlin) and analysis (Cloud/Julia).
+### Phase 1: Data Acquisition and IPC (Android/Kotlin)
 
-### II.I Data Protocol (Cloud Communication)
+* **1.1 Glucose Receiver:** ✅ Implemented (`GlucoseReceiver.kt`)
 
-An **asynchronous, stateless protocol** is used for data transmission, ensuring maximum data protection:
+* **1.2 Data Persistence (Room):** ✅ Entities and DAOs defined.
 
-* **REQUEST.json:** Contains encrypted, time-series-based raw data. Sent only upon request.
+* **1.3 IPC Protocols:** 🚧 Implementation of the `REQUEST.json` / `RESPONSE.json` logic is pending.
 
-* **RESPONSE.json:** Contains exclusively the **new calculated factors** (ICR, ISF, Targets) and an explanatory message.
+### Phase 2: Core Analytics and Optimization (Julia)
 
-* **Integrity:** Every transmission is secured by a **SHA256 hash** of the payload to detect manipulation or data loss.
+* **2.1 Protocol Parser:** 🚧 Julia script for reading `REQUEST.json`.
 
-### II.II UX Principles and Transparency
+* **2.2 Data Preparation:** 🚧 Feature Engineering (Glucose velocity, IOB estimation).
 
-1. **Background Transparency (UX):** The process of data acquisition, export, and factor updating runs **completely invisibly and automatically** in the background. The user is not interrupted by pop-ups or manual actions. The IOB display in the foreground service is the only constant feedback.
+* **2.3 Optimization:** 🚧 Development of the Julia routine for ISF/ICR adjustment.
 
-2. **Explainable Transparency (XAI):** The **time-series analysis** is not a black box. The AI (Julia backend) must clearly and traceably justify the **derivation of the new factors** (e.g., "ISF increased by 5% because the nocturnal drop rate was too strong in the trend") in the `RESPONSE.json`.
+## 3. File Protocols (IPC)
 
-## III. Phases and Roadmap
+Data exchange between the client and backend is performed via defined, file-based protocols.
 
-The project is divided into 5 main phases:
-
-| **Phase** | **Goal** | **Status** | 
+| Protocol | Direction | Purpose | 
  | ----- | ----- | ----- | 
-| **Phase 1** | Data Acquisition and IOB Detection (Kotlin/Android) | **IMPLEMENTED** | 
-| **Phase 2** | AI Analysis Backend (Julia) and Factor Optimization | PENDING | 
-| **Phase 3** | App Core Logic (Factor Update, UI) | PENDING | 
-| **Phase 4** | Beta Testing, Debugging, Audit Preparation | PENDING | 
-| **Phase 5** | Strategic Handover for Community Integration | PENDING | 
+| `REQUEST.json` | Client → Julia | Contains historical glucose and event data for analysis. | 
+| `RESPONSE.json` | Julia → Client | Contains the optimized factors (ISF, CarbFactor, etc.) calculated by the Julia backend. | 
 
-### Key Tasks in Phase 3 (App Core Logic)
+---
 
-* **Task 3.2: Safety Check ("Check Mode")**
+## 4. References / License Notes
 
-  * Implementation of a function that checks the **user's planned dose** against the AI-optimized dose.
+### 4.1 Primary Data Source: Juggluco
 
-  * **Central Safety Mechanism:** In case of a **significant deviation** between the dose planned by the user and the dose suggested by **T1D-DOSIS**, the app **must** actively advise the user to **review their decision again**.
+T1D-DOSIS relies on the ability to receive data directly from the **Juggluco** app, which provides readings from Freestyle Libre sensors via its Android Broadcasts.
 
-## IV. Technical Components (Kotlin / Julia)
+* **Project Website:** <https://www.juggluco.nl/Juggluco/index.html>
 
-| **Component** | **Language** | **Purpose** | 
+* **Functionality:** The T1D-DOSIS Client app listens for the `luciad.com.juice.android.action.NEWVALUE` Intent sent by Juggluco to receive current glucose values in real-time.
+
+### 4.2 T1D-DOSIS (This Project)
+
+This project is licensed under the **GNU General Public License, Version 3 (GPLv3)**.
+
+* **License Goal:** All modifications and extensions to the core logic must also be published under the GPLv3. This guarantees that the life-critical algorithms for insulin calculation remain open, verifiable, and auditable at all times.
+
+### 4.3 GlucoDataHandler (GDH)
+
+The design of the **Glucose Broadcast Receiver** was inspired by GlucoDataHandler (Author: pachi81), particularly regarding the handling of Juggluco broadcasts.
+
+* **Project:** GlucoDataHandler (GDH)
+
+* **Author:** T1D-DOSIS (Inspired by pachi81's design)
+
+* **License:** **MIT License**
+
+* **Disclaimer:** The source code of GDH itself is not part of this project but served only as a reference for inter-process communication in the Android environment. The entire analytics component in Julia is independently developed.
+
+---
+
+## 5. Positioning: Semi-Automatic Control System and Synergy
+
+T1D-DOSIS positions itself as a **Semi-Automatic Control System with Counter-Regulation** that optimizes the efficiency of therapeutic factors without controlling insulin delivery in real-time.
+
+### 5.1 Distinction from Fully Automatic Closed-Loop Systems (DIY-APS)
+
+T1D-DOSIS complements the ecosystem of **Do-It-Yourself Artificial Pancreas Systems (DIY-APS)**, whose core function is minute-by-minute dosage control.
+
+| System | Focus and License | GitHub / Primary Source | 
  | ----- | ----- | ----- | 
-| **Client** | Kotlin/Android | Live data reception (Juggluco BroadcastReceiver), Local DB (Room), IOB Service, Data Export. | 
-| **Backend** | Julia | Protocol Parser, Time-Series Analysis, AI/Optimization Algorithm, Factor Recalculation. | 
+| **OpenAPS** | Active, continuous insulin dose control. (GPLv3) | <https://openaps.org/> | 
+| **AndroidAPS** | Active, continuous control via Android devices. (GPLv3) | [https://github.com/androidaps/androidaps](https://www.google.com/search?q=https://github.com/androidaps/androidaps) | 
+| **Loop** | Active, continuous control via iOS/Watch devices. (MIT License) | <https://loopandlearn.org/> | 
 
-## V. Legal Strategy and Disclaimer (Highest Warning Level)
+### 5.2 The Role of T1D-DOSIS (Intelligent Calibration)
 
-This section is the most important part of the entire project.
+T1D-DOSIS serves as an **upstream optimization stage** for these systems or for manual dosing strategies:
 
-* **Danger to Life:** Since the system intervenes in therapy and faulty decisions are **life-threatening and potentially fatal**, this is the most critical section.
+1. **Goal of APS:** Short-term glucose control, based on the ISF and CarbFactor values *set by the user*.
 
-* **Complete Personal Responsibility:** The user bears full and unrestricted responsibility for every decision made based on the app's calculations.
+2. **Goal of T1D-DOSIS:** The optimization and updating of the **underlying constants** (ISF, CarbFactor), ensuring that the *basis* for control is more precise.
 
-* **Discouragement of Therapy Use:** Users are explicitly **discouraged** from using the app for direct therapy decision-making. **T1D-DOSIS** is a prototype and not a medical device.
-
-* **Licensing Strategy:** The choice of the **GNU General Public License (GPLv3)** prevents third parties from using the code for commercial, proprietary applications without reciprocity or a separate licensing agreement.
-
-* **Auditability:** The entire project serves as a **transparent, auditable prototype development (Proof-of-Concept)**. The GPLv3 license supports this goal by ensuring public review.
-
-## VI. License
-
-This project is licensed under the **GNU General Public License, Version 3 (GPLv3)**. This ensures the source code remains open and transparent and prevents proprietary appropriation of the system. The license terms (including the comprehensive disclaimer) are fully detailed in the [`LICENSE`](LICENSE) file and must be retained in all copies or substantial portions of the software.
-
-*(This document was last updated on 2025-10-28)*
+**Synergy:** T1D-DOSIS improves the accuracy of the factors that form the basis for any dosing calculation or APS system. The optimized ISF or CarbFactor value calculated by the Julia backend could, for example, be adopted by the user in AndroidAPS or Loop once a week.
