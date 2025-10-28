@@ -17,9 +17,9 @@ The project is divided into two main components:
 
 ### Phase 1: Data Acquisition and IPC (Android/Kotlin)
 
-* **1.1 Glucose Receiver:** ✅ Implemented (`GlucoseReceiver.kt`)
+* **1.1 Glucose Receiver:** 🚧  Implemented (`GlucoseReceiver.kt`)
 
-* **1.2 Data Persistence (Room):** ✅ Entities and DAOs defined.
+* **1.2 Data Persistence (Room):** 🚧  Entities and DAOs defined.
 
 * **1.3 IPC Protocols:** 🚧 Implementation of the `REQUEST.json` / `RESPONSE.json` logic is pending.
 
@@ -83,8 +83,9 @@ T1D-DOSIS complements the ecosystem of **Do-It-Yourself Artificial Pancreas Syst
 | System | Focus and License | GitHub / Primary Source | 
  | ----- | ----- | ----- | 
 | **OpenAPS** | Active, continuous insulin dose control. (GPLv3) | <https://openaps.org/> | 
-| **AndroidAPS** | Active, continuous control via Android devices. (GPLv3) | [https://github.com/androidaps/androidaps](https://www.google.com/search?q=https://github.com/androidaps/androidaps) | 
+| **AndroidAPS** | Active, continuous control via Android devices. (GPLv3) | <https://github.com/androidaps/androidaps> | 
 | **Loop** | Active, continuous control via iOS/Watch devices. (MIT License) | <https://loopandlearn.org/> | 
+| **Trio** | iOS-based AID system based on OpenAPS algorithm, strong in pediatrics and low-resource settings. (AGPLv3) | <https://github.com/nightscout/Trio> | 
 
 ### 5.2 The Role of T1D-DOSIS (Intelligent Calibration)
 
@@ -95,3 +96,15 @@ T1D-DOSIS serves as an **upstream optimization stage** for these systems or for 
 2. **Goal of T1D-DOSIS:** The optimization and updating of the **underlying constants** (ISF, CarbFactor), ensuring that the *basis* for control is more precise.
 
 **Synergy:** T1D-DOSIS improves the accuracy of the factors that form the basis for any dosing calculation or APS system. The optimized ISF or CarbFactor value calculated by the Julia backend could, for example, be adopted by the user in AndroidAPS or Loop once a week.
+
+### 5.3 Weitere Synergien im Open-Source-Ökosystem
+
+T1D-DOSIS integriert sich nahtlos in das breitere Open-Source-Ökosystem für T1D-Management. Hier eine Übersicht über weitere relevante Projekte, die Datenflüsse, Visualisierung oder Erweiterungen bieten und mit T1D-DOSIS kombiniert werden können (z. B. für Export/Import von Faktoren oder als alternative Datenquellen):
+
+| Projekt | Fokus und Lizenz | GitHub / Primary Source | Synergie zu T1D-DOSIS |
+|---------|------------------|--------------------------|-----------------------|
+| **Nightscout** | Cloud-basiertes CGM-Visualisierungs- und Sharing-Tool. (AGPLv3) | <https://github.com/nightscout/cgm-remote-monitor> | Standard-Brücke für Daten-Export/Import; ermöglicht wöchentliche Faktoren-Sync mit APS-Systemen. |
+| **xDrip+** | Android-App für CGM-Daten von diversen Sensoren (z. B. Libre, Dexcom). (GPLv3) | <https://github.com/Nightwing789/xDrip> | Backup-Datenquelle zu Juggluco; Broadcast-kompatibel für robusten Input in die Room-DB. |
+| **Awesome-Diabetes-Software** | Kuratierte Liste von Diabetes-Tools und Ressourcen. (Variabel) | <https://github.com/openaps/awesome-diabetes> | Entdeckung weiterer Tools; ideal für ML-Tests in Julia (z. B. mit Simglucose-Simulator). |
+
+**Hinweis:** Dieses Ökosystem wächst rasch – prüfen Sie regelmäßig auf Updates. T1D-DOSIS vermeidet Abhängigkeiten, bleibt aber kompatibel, um Adoption zu fördern.
