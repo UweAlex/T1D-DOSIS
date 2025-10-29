@@ -1,244 +1,470 @@
-# T1D-DOSIS: Computer-Aided Insulin Injection
+# T1D-DOSIS: Intelligente Therapie-Optimierung für MDI
 
-**AI-Supported Optimization of Therapeutic Factors for Type 1 Diabetics**
-
-## 1. Project Overview
-
-T1D-DOSIS is a lean, modular system designed to suggest optimized insulin and glucose (e.g., for hypoglycemia) administrations based on historical glucose and activity data. It provides specific recommendations on *when* and *how much* rapid-acting or long-acting insulin to administer, as well as *when* and *how much* glucose (e.g., dextrose tablets or juice) to consume. Therapeutic factors (e.g., Insulin Sensitivity Factor – ISF, Carbohydrate Factor) are largely internal quantities derived as a byproduct of this process and can be used or exported elsewhere (e.g., for integration with APS systems). Additionally, it offers intelligent alarms that account for Insulin on Board (IOB), glucose velocity, and other factors to detect the risk of hypoglycemia very early. The goal: To noticeably improve the lives of people with Type 1 Diabetes (T1D) by making insulin injections more precise and the administration of glucose safer and more dosed. Through data-based predictions and adjustments, T1D-DOSIS reduces uncertainties in everyday life, minimizes complications, and promotes greater autonomy – without real-time dosing, but as a smart calibration aid.
-
-The project is divided into two main components, with cross-device communication (Android to Desktop) enabled via cloud storage like Google Drive:
-
-| Component | Language/Technology | Task | 
- | ----- | ----- | ----- | 
-| **Client/Data Acquisition** | Kotlin (Android) | Receives glucose broadcasts (e.g., from Juggluco), stores data (Room DB), and manages IPC (Inter-Process Communication) with the backend via cloud sync. | 
-| **Analysis/Optimization** | Julia (Backend) | Performs complex time series analysis, Machine Learning, and optimization of therapeutic factors. Operates in isolation via file protocols synced over cloud storage. | 
-
-## 2. Development Status
-
-### Phase 1: Data Acquisition and IPC (Android/Kotlin)
-
-* **1.1 Glucose Receiver:** 🚧 Implementation pending (`GlucoseReceiver.kt`)
-
-* **1.2 Data Persistence (Room):** 🚧 Entities and DAOs to be defined.
-
-* **1.3 IPC Protocols:** 🚧 Implementation of the `REQUEST.json` / `RESPONSE.json` logic via Google Drive API is pending.
-
-### Phase 2: Core Analytics and Optimization (Julia)
-
-* **2.1 Protocol Parser:** 🚧 Julia script for reading `REQUEST.json` from Google Drive.
-
-* **2.2 Data Preparation:** 🚧 Feature Engineering (Glucose velocity, IOB estimation).
-
-* **2.3 Optimization:** 🚧 Development of the Julia routine for ISF/ICR adjustment.
-
-## 3. File Protocols (IPC)
-
-Data exchange between the client (Android) and backend (Julia/Desktop) occurs via cloud-synced file protocols, enabling cross-device communication. For example, using Google Drive API for uploading/downloading JSON files to a dedicated folder (e.g., "T1D-DOSIS-Sync"). Alternatives like Dropbox or OneDrive could be considered for similar functionality.
-
-| Protocol | Direction | Purpose | 
- | ----- | ----- | ----- | 
-| `REQUEST.json` | Client → Cloud (e.g., Google Drive) | Contains historical glucose and event data for analysis; uploaded by Android app. | 
-| `RESPONSE.json` | Cloud → Julia (Backend) | Contains suggested insulin/glucose doses (e.g., timing and amount for rapid/long-acting insulin or dextrose), intelligent alarm thresholds (considering IOB, velocity, etc.), and derived therapeutic factors; downloaded and processed by Julia script. | 
-
-**Implementation Notes:**
-- **Android/Kotlin:** Use Google Drive API v3 for file upload/download (see [official docs](https://developers.google.com/drive/api) and [Kotlin integration guide](https://proandroiddev.com/android-kotlin-jetpack-compose-interacting-with-google-drive-api-v3-2023-the-complete-b8bc1bdbb13b)).
-- **Julia/Desktop:** Use packages like GoogleDrive.jl or GoogleCloud.jl to poll/download files from the sync folder (see [GoogleDrive.jl](https://juliapackages.com/p/googledrive) and [GoogleCloud.jl](https://github.com/JuliaCloud/GoogleCloud.jl)).
-- Sync triggers: Periodic polling (e.g., every 5–15 min) or webhooks if supported, to handle REQUEST upload and RESPONSE generation.
+**Open-Source System für Pen-Nutzer mit CGM**
 
 ---
 
-## 4. References / License Notes
+## Was ist T1D-DOSIS?
 
-### 4.1 Primary Data Source: Juggluco
+T1D-DOSIS ist ein **DIY-Projekt** zur Optimierung der Insulintherapie bei **Multiple Daily Injections (MDI)** – also für Menschen, die mit Pen oder Spritze behandelt werden.
 
-T1D-DOSIS relies on the ability to receive data directly from the **Juggluco** app, which provides readings from Freestyle Libre sensors via its Android Broadcasts.
+### Das Problem
 
-* **Project Website:** <https://www.juggluco.nl/Juggluco/index.html>
+Wenn du mit Pen spritzt und CGM nutzt, siehst du zwar deine Glukosewerte in Echtzeit, aber:
+- Standard-Alarme warnen oft zu spät (erst bei 70 mg/dl)
+- Closed-Loop-Systeme (AndroidAPS/Loop) funktionieren nur mit Pumpe
+- xDrip+ kennt dein aktives Insulin (IOB) nicht
+- Therapie-Faktoren (ISF, ICR) musst du manuell optimieren
 
-* **Functionality:** The T1D-DOSIS Client app listens for the `luciad.com.juice.android.action.NEWVALUE` Intent sent by Juggluco to receive current glucose values in real-time.
+### Die Lösung: Zwei Komponenten
 
-### 4.2 T1D-DOSIS (This Project)
+**📱 Android-App: Intelligente Hypo-Frühwarnung**
+Standard-Alarm: "70 mg/dl erreicht" → Zu spät!
 
-This project is licensed under the **GNU General Public License, Version 3 (GPLv3)**.
+T1D-DOSIS: "95 mg/dl, aber:
+            - 2.5 IE IOB aktiv
+            - Fallrate: -3 mg/dl/min  
+            - Deine ISF: 1:40
+            → Hypo in ~15 Min wahrscheinlich
+            → Jetzt 15g KH essen"
 
-* **License Goal:** All modifications and extensions to the core logic must also be published under the GPLv3. This guarantees that the life-critical algorithms for insulin calculation remain open, verifiable, and auditable at all times.
+**💻 Desktop-Backend: Langfristige Optimierung**
+- Analysiert Wochen/Monate deiner Daten
+- Berechnet optimale ISF, ICR, Basalraten
+- Berücksichtigt Tageszeit, Muster, individuelle Faktoren
+- Gibt konkrete Dosierungsempfehlungen
 
-### 4.3 GlucoDataHandler (GDH)
-
-The design of the **Glucose Broadcast Receiver** was inspired by GlucoDataHandler (Author: pachi81), particularly regarding the handling of Juggluco broadcasts.
-
-* **Project:** GlucoDataHandler (GDH)
-
-* **Author:** T1D-DOSIS (Inspired by pachi81's design)
-
-* **License:** **MIT License**
-
-* **Disclaimer:** The source code of GDH itself is not part of this project but served only as a reference for inter-process communication in the Android environment. The entire analytics component in Julia is independently developed.
-
----
-
-## 5. Positioning: Semi-Automatic Control System and Synergy
-
-T1D-DOSIS positions itself as a **Semi-Automatic Control System with Counter-Regulation** that suggests optimized insulin and glucose doses without controlling insulin delivery in real-time. It provides timed and quantified recommendations for rapid-acting/long-acting insulin and dextrose intake, plus proactive alarms incorporating IOB, glucose trends, and risk factors for early hypoglycemia detection. Therapeutic factors are computed internally as supporting metrics. It improves the daily lives of T1D individuals by making insulin injections more precise and hypo-management safer (e.g., via predictions for glucose dosing).
-
-### 5.1 Distinction from Fully Automatic Closed-Loop Systems (DIY-APS)
-
-T1D-DOSIS complements the ecosystem of **Do-It-Yourself Artificial Pancreas Systems (DIY-APS)**, whose core function is minute-by-minute dosage control.
-
-| System | Focus and License | GitHub / Primary Source | 
- | ----- | ----- | ----- | 
-| **OpenAPS** | Active, continuous insulin dose control. (GPLv3) | <https://openaps.org/> | 
-| **AndroidAPS** | Active, continuous control via Android devices. (GPLv3) | <https://github.com/androidaps/androidaps> | 
-| **Loop** | Active, continuous control via iOS/Watch devices. (MIT License) | <https://loopandlearn.org/> | 
-| **Trio** | iOS-based AID system based on OpenAPS algorithm, strong in pediatrics and low-resource settings. (AGPLv3) | <https://github.com/nightscout/Trio> | 
-
-### 5.2 The Role of T1D-DOSIS (Intelligent Calibration)
-
-T1D-DOSIS serves as an **upstream optimization stage** for these systems or for manual dosing strategies:
-
-1. **Goal of APS:** Short-term glucose control, based on the ISF and CarbFactor values *set by the user*.
-
-2. **Goal of T1D-DOSIS:** To suggest precise insulin and glucose doses, including timing and amounts for rapid-acting/long-acting insulin or dextrose consumption, with therapeutic factors (ISF, CarbFactor) as largely internal quantities derived in the process. These factors can be exported or used elsewhere as a byproduct. It also generates intelligent alarms that factor in IOB, glucose velocity, and other metrics for very early detection of hypoglycemia risks.
-
-**Synergy:** T1D-DOSIS provides actionable dose suggestions and proactive alerts while generating reusable therapeutic factors that improve the basis for any dosing calculation or APS system. For example, the computed ISF or CarbFactor could be adopted by the user in AndroidAPS or Loop once a week.
-
-### 5.3 Further Synergies in the Open-Source Ecosystem
-
-T1D-DOSIS integrates seamlessly into the broader open-source ecosystem for T1D management. Here is an overview of additional relevant projects that provide data flows, visualization, or extensions and can be combined with T1D-DOSIS (e.g., for exporting/importing factors or as alternative data sources):
-
-| Project | Focus and License | GitHub / Primary Source | Synergy with T1D-DOSIS |
-|---------|-------------------|--------------------------|------------------------|
-| **Nightscout** | Cloud-based CGM visualization and sharing tool. (AGPLv3) | <https://github.com/nightscout/cgm-remote-monitor> | Standard bridge for data export/import; enables weekly factor syncs with APS systems. |
-| **xDrip+** | Android app for CGM data from various sensors (e.g., Libre, Dexcom). (GPLv3) | <https://github.com/Nightwing789/xDrip> | Backup data source to Juggluco; broadcast-compatible for robust input into the Room DB. |
-| **Awesome-Diabetes-Software** | Curated list of diabetes tools and resources. (Variable) | <https://github.com/openaps/awesome-diabetes> | Discovery of further tools; ideal for ML tests in Julia (e.g., with Simglucose simulator). |
-
-**Note:** This ecosystem is growing rapidly – check for updates regularly. T1D-DOSIS avoids dependencies but remains compatible to promote adoption.
-
-## 6. Notes on Development and Usage
-
-**Feasibility Study and Personal Use:**  
-For legal reasons, it should be emphasized that T1D-DOSIS is currently to be understood as a feasibility study (Proof-of-Concept). The project was primarily developed for the personal use of the author and is not intended as a finished, certified medical product. It serves to explore concepts for optimizing therapeutic factors and is kept in an early development stage.  
-
-**Call for Further Development:**  
-Nevertheless, the project is open-source (GPLv3) and is intended to inspire competent developers, researchers, or T1D community members to continue or expand it. Contributions, feedback, and collaborations are welcome – let's create something lasting together! Feel free to open Issues or Pull Requests on GitHub.
-
-**Disclaimer:** T1D-DOSIS is not a medical device and does not replace professional medical advice. Users are responsible for all dosing decisions. Always consult a healthcare professional.# T1D-DOSIS: Computer-Aided Insulin Injection
-
-**AI-Supported Optimization of Therapeutic Factors for Type 1 Diabetics**
-
-## 1. Project Overview
-
-T1D-DOSIS is a lean, modular system designed to suggest optimized insulin and glucose (e.g., for hypoglycemia) administrations based on historical glucose and activity data. Therapeutic factors (e.g., Insulin Sensitivity Factor – ISF, Carbohydrate Factor) are largely internal quantities derived as a byproduct of this process and can be used or exported elsewhere (e.g., for integration with APS systems). The goal: To noticeably improve the lives of people with Type 1 Diabetes (T1D) by making insulin injections more precise and the administration of glucose safer and more dosed. Through data-based predictions and adjustments, T1D-DOSIS reduces uncertainties in everyday life, minimizes complications, and promotes greater autonomy – without real-time dosing, but as a smart calibration aid.
-
-The project is divided into two main components:
-
-| Component | Language/Technology | Task | 
- | ----- | ----- | ----- | 
-| **Client/Data Acquisition** | Kotlin (Android) | Receives glucose broadcasts (e.g., from Juggluco), stores data (Room DB), and manages IPC (Inter-Process Communication) with the backend. | 
-| **Analysis/Optimization** | Julia (Backend) | Performs complex time series analysis, Machine Learning, and optimization of therapeutic factors. Operates in isolation via file protocols. | 
-
-## 2. Development Status
-
-### Phase 1: Data Acquisition and IPC (Android/Kotlin)
-
-* **1.1 Glucose Receiver:** 🚧 Implementation pending (`GlucoseReceiver.kt`)
-
-* **1.2 Data Persistence (Room):** 🚧 Entities and DAOs to be defined.
-
-* **1.3 IPC Protocols:** 🚧 Implementation of the `REQUEST.json` / `RESPONSE.json` logic is pending.
-
-### Phase 2: Core Analytics and Optimization (Julia)
-
-* **2.1 Protocol Parser:** 🚧 Julia script for reading `REQUEST.json`.
-
-* **2.2 Data Preparation:** 🚧 Feature Engineering (Glucose velocity, IOB estimation).
-
-* **2.3 Optimization:** 🚧 Development of the Julia routine for ISF/ICR adjustment.
-
-## 3. File Protocols (IPC)
-
-Data exchange between the client and backend is performed via defined, file-based protocols.
-
-| Protocol | Direction | Purpose | 
- | ----- | ----- | ----- | 
-| `REQUEST.json` | Client → Julia | Contains historical glucose and event data for analysis. | 
-| `RESPONSE.json` | Julia → Client | Contains the optimized factors (ISF, CarbFactor, etc.) calculated by the Julia backend. | 
+**Beispiel-Output:**
+Analyse der letzten 4 Wochen:
+✓ ISF variiert: Morgens 1:35, Abends 1:45
+✓ ICR bei Pizza: 1:10 → 1:8 empfohlen
+✓ Basalrate: 16 IE → 18 IE
+✓ Nächtliche Hypos: Basal -1 IE
 
 ---
 
-## 4. References / License Notes
+## Für wen?
 
-### 4.1 Primary Data Source: Juggluco
+### ✅ T1D-DOSIS ist für dich, wenn du:
+- Mit **Pen oder Spritze** behandelt wirst (MDI)
+- CGM nutzt (z.B. Freestyle Libre via Juggluco)
+- Deine Therapie datenbasiert optimieren willst
+- Bereit bist, neue Software auszuprobieren (Beta-Tester-Mentalität)
+- Eigenverantwortung für deine Therapie übernimmst
 
-T1D-DOSIS relies on the ability to receive data directly from the **Juggluco** app, which provides readings from Freestyle Libre sensors via its Android Broadcasts.
+### ❌ T1D-DOSIS ist NICHT für:
+- **Pumpen-Nutzer** → Nutze AndroidAPS/Loop/OpenAPS (bessere Optionen!)
+- Menschen ohne CGM
+- Personen die fertige, zertifizierte Lösungen erwarten
+- Menschen ohne Grundverständnis von T1D-Management (ISF, IOB, etc.)
 
-* **Project Website:** <https://www.juggluco.nl/Juggluco/index.html>
+### 🤔 Warum nicht Pumpe + Closed-Loop?
 
-* **Functionality:** The T1D-DOSIS Client app listens for the `luciad.com.juice.android.action.NEWVALUE` Intent sent by Juggluco to receive current glucose values in real-time.
+**Closed-Loop mit Pumpe ist objektiv besser**, aber nicht für jeden möglich/gewünscht:
+- 💰 Kosten / keine Kassenübernahme
+- 👕 Lifestyle (keine sichtbaren Geräte am Körper)
+- 🏊 Sport (Schwimmen, Kontaktsport)
+- 🧠 Präferenz für bewusste manuelle Kontrolle
 
-### 4.2 T1D-DOSIS (This Project)
-
-This project is licensed under the **GNU General Public License, Version 3 (GPLv3)**.
-
-* **License Goal:** All modifications and extensions to the core logic must also be published under the GPLv3. This guarantees that the life-critical algorithms for insulin calculation remain open, verifiable, and auditable at all times.
-
-### 4.3 GlucoDataHandler (GDH)
-
-The design of the **Glucose Broadcast Receiver** was inspired by GlucoDataHandler (Author: pachi81), particularly regarding the handling of Juggluco broadcasts.
-
-* **Project:** GlucoDataHandler (GDH)
-
-* **Author:** T1D-DOSIS (Inspired by pachi81's design)
-
-* **License:** **MIT License**
-
-* **Disclaimer:** The source code of GDH itself is not part of this project but served only as a reference for inter-process communication in the Android environment. The entire analytics component in Julia is independently developed.
+→ **T1D-DOSIS macht MDI so intelligent wie möglich**
 
 ---
 
-## 5. Positioning: Semi-Automatic Control System and Synergy
+## Architektur
 
-T1D-DOSIS positions itself as a **Semi-Automatic Control System with Counter-Regulation** that suggests optimized insulin and glucose doses without controlling insulin delivery in real-time. Therapeutic factors are computed internally as supporting metrics. It improves the daily lives of T1D individuals by making insulin injections more precise and hypo-management safer (e.g., via predictions for glucose dosing).
+### Komponente 1: Android-App (Kotlin)
 
-### 5.1 Distinction from Fully Automatic Closed-Loop Systems (DIY-APS)
+**Echtzeit-Funktionen:**
+- Empfängt Glukose-Broadcasts von Juggluco (oder xDrip+)
+- **IOB-Berechnung** (nutzt bewährte xDrip+ Algorithmen)
+- **ML-basierte Hypo-Prädiktion** (geht über Standard-Alarme hinaus)
+- Zeigt Empfehlungen vom Desktop-Backend
+- Speichert Historie lokal (Room Database)
 
-T1D-DOSIS complements the ecosystem of **Do-It-Yourself Artificial Pancreas Systems (DIY-APS)**, whose core function is minute-by-minute dosage control.
+### Warum eine eigene App?
 
-| System | Focus and License | GitHub / Primary Source | 
- | ----- | ----- | ----- | 
-| **OpenAPS** | Active, continuous insulin dose control. (GPLv3) | <https://openaps.org/> | 
-| **AndroidAPS** | Active, continuous control via Android devices. (GPLv3) | <https://github.com/androidaps/androidaps> | 
-| **Loop** | Active, continuous control via iOS/Watch devices. (MIT License) | <https://loopandlearn.org/> | 
-| **Trio** | iOS-based AID system based on OpenAPS algorithm, strong in pediatrics and low-resource settings. (AGPLv3) | <https://github.com/nightscout/Trio> | 
+T1D-DOSIS ist **NICHT** xDrip+ Konkurrenz, sondern ergänzt es:
 
-### 5.2 The Role of T1D-DOSIS (Intelligent Calibration)
+**Was xDrip+ exzellent macht (wird übernommen):**
+- ✅ IOB-Berechnung (bewährte Algorithmen)
+- ✅ CGM-Datenverarbeitung
+- ✅ Umfangreiche Sensor-Unterstützung
 
-T1D-DOSIS serves as an **upstream optimization stage** for these systems or for manual dosing strategies:
+**Was T1D-DOSIS hinzufügt:**
+- 🆕 ML-basierte Hypo-Prädiktion (15-30 Min Vorhersage)
+- 🆕 Desktop-Backend für Langzeit-Optimierung
+- 🆕 Adaptive ISF/ICR-Berechnung aus Wochen/Monaten Daten
+- 🆕 Konkrete Dosierungsempfehlungen
 
-1. **Goal of APS:** Short-term glucose control, based on the ISF and CarbFactor values *set by the user*.
+**Alternative Architektur denkbar:**
+- T1D-DOSIS als xDrip+ Plugin/Erweiterung statt standalone App
+- Wird in früher Entwicklungsphase evaluiert
 
-2. **Goal of T1D-DOSIS:** To suggest precise insulin and glucose doses, with therapeutic factors (ISF, CarbFactor) as largely internal quantities derived in the process. These factors can be exported or used elsewhere as a byproduct.
+### Komponente 2: Desktop-Backend (Julia)
 
-**Synergy:** T1D-DOSIS provides actionable dose suggestions while generating reusable therapeutic factors that improve the basis for any dosing calculation or APS system. For example, the computed ISF or CarbFactor could be adopted by the user in AndroidAPS or Loop once a week.
+**Langfristige Analyse:**
+- Liest historische Daten via Cloud-Sync
+- Machine Learning zur Mustererkennung
+- Optimierung therapeutischer Faktoren
+- Generiert Dosierungsempfehlungen
 
-### 5.3 Further Synergies in the Open-Source Ecosystem
+**Warum Julia?**
+- Perfekt für wissenschaftliche Berechnungen
+- Schnell für komplexe Optimierungen
+- Elegante Syntax für pharmakokinetische Modelle
 
-T1D-DOSIS integrates seamlessly into the broader open-source ecosystem for T1D management. Here is an overview of additional relevant projects that provide data flows, visualization, or extensions and can be combined with T1D-DOSIS (e.g., for exporting/importing factors or as alternative data sources):
+### Komponente 3: Cloud-Sync (Google Drive API)
 
-| Project | Focus and License | GitHub / Primary Source | Synergy with T1D-DOSIS |
-|---------|-------------------|--------------------------|------------------------|
-| **Nightscout** | Cloud-based CGM visualization and sharing tool. (AGPLv3) | <https://github.com/nightscout/cgm-remote-monitor> | Standard bridge for data export/import; enables weekly factor syncs with APS systems. |
-| **xDrip+** | Android app for CGM data from various sensors (e.g., Libre, Dexcom). (GPLv3) | <https://github.com/Nightwing789/xDrip> | Backup data source to Juggluco; broadcast-compatible for robust input into the Room DB. |
-| **Awesome-Diabetes-Software** | Curated list of diabetes tools and resources. (Variable) | <https://github.com/openaps/awesome-diabetes> | Discovery of further tools; ideal for ML tests in Julia (e.g., with Simglucose simulator). |
+**Datenfluss:**
+Android → Google Drive (REQUEST.json)
+            ↓
+         Desktop Julia (Analyse)
+            ↓
+Android ← Google Drive (RESPONSE.json)
 
-**Note:** This ecosystem is growing rapidly – check for updates regularly. T1D-DOSIS avoids dependencies but remains compatible to promote adoption.
+**Latenz:** 5-60 Minuten (vollkommen ausreichend für Langzeit-Optimierung)
 
-## 6. Notes on Development and Usage
+---
 
-**Feasibility Study and Personal Use:**  
-For legal reasons, it should be emphasized that T1D-DOSIS is currently to be understood as a feasibility study (Proof-of-Concept). The project was primarily developed for the personal use of the author and is not intended as a finished, certified medical product. It serves to explore concepts for optimizing therapeutic factors and is kept in an early development stage.  
+## Entwicklungsstatus
 
-**Call for Further Development:**  
-Nevertheless, the project is open-source (GPLv3) and is intended to inspire competent developers, researchers, or T1D community members to continue or expand it. Contributions, feedback, and collaborations are welcome – let's create something lasting together! Feel free to open Issues or Pull Requests on GitHub.
+**Aktuell: Frühe Entwicklungsphase (Stand Oktober 2025)**
 
-**Disclaimer:** T1D-DOSIS is not a medical device and does not replace professional medical advice. Users are responsible for all dosing decisions. Always consult a healthcare professional.
+### ✅ Abgeschlossen:
+- Konzept und Architektur definiert
+- Technologie-Stack festgelegt
+- Algorithmen recherchiert
+- Dokumentation erstellt
+- GitHub Repository eingerichtet
+- Erste Code-Commits (Android Basics)
+
+### 🚧 In Arbeit (Q4 2025):
+- Android: Juggluco Broadcast-Empfänger
+- Android: Room Database Schema
+- Android: IOB-Berechnung
+- Julia: Datenparser für REQUEST.json
+- Google Drive API Integration
+
+### 📋 Geplant (Q1-Q2 2026):
+- Intelligente Hypo-Prädiktion (ML-Modell)
+- ISF/ICR-Optimierung aus historischen Daten
+- Android UI für Alarme und Empfehlungen
+- Umfangreiches Testing mit Simulationsdaten
+
+### 🎯 Langfristig:
+- Vorsichtige Selbsttests mit eigenen Daten
+- Dokumentation für technisch versierte Community
+- Iterative Verbesserung basierend auf Feedback
+
+**Realistisch:** Erste funktionsfähige Version in 6-12 Monaten denkbar.
+
+---
+
+## Technische Details
+
+### IOB-Berechnung
+
+**Grundlage: xDrip+ Algorithmus**
+- xDrip+ hat eine hervorragende, erprobte IOB-Berechnung
+- T1D-DOSIS nutzt die gleichen Algorithmen (Open-Source GPL-3)
+- Kein "Rad neu erfinden" bei bewährten Komponenten
+
+**Erweiterungen für T1D-DOSIS:**
+- Integration mit ISF-Optimierung (adaptive Faktoren)
+- Verknüpfung mit Hypo-Prädiktion (ML-basiert)
+- Langfristige IOB-Muster-Analyse im Julia-Backend
+
+### ISF-Optimierung
+
+**Multi-faktoriell:**
+- Tageszeit (zirkadianer Rhythmus)
+- Wochentag (Arbeit vs. Wochenende)
+- Aktivitätslevel
+- Hormonzyklen, Stress, Krankheit
+
+**Machine Learning Ansatz:**
+- Zeitreihen-Analyse über Wochen/Monate
+- Erkennung von Mustern und Anomalien
+- Adaptive Anpassung der Faktoren
+
+### Hypo-Prädiktion
+
+**Spezifisch für MDI:**
+- Längere Vorhersage-Horizonte (15-30 Min)
+- Konservative Schwellwerte (kein Sicherheitsnetz wie bei Pumpe)
+- Berücksichtigung von Mahlzeiten-Absorption
+- Reduktion von Fehlalarmen durch ML
+
+---
+
+## Einordnung im DIY-Ökosystem
+
+| System | Hardware | Zielgruppe | Status | Automatisierung |
+|--------|----------|------------|--------|-----------------|
+| **AndroidAPS** | Insulinpumpe | Pumpen-Nutzer | Etabliert, aktiv | Closed-Loop |
+| **Loop** | Insulinpumpe | iOS/Pumpe | Etabliert, aktiv | Closed-Loop |
+| **OpenAPS** | Insulinpumpe | Pumpen-Nutzer | Etabliert, aktiv | Closed-Loop |
+| **xDrip+** | CGM | Alle | Etabliert, weit verbreitet | Anzeige + Basis-Alarme |
+| **Juggluco** | CGM (Libre) | Libre-Nutzer | Etabliert, maintained | CGM + Standard-Alarme |
+| **T1D-DOSIS** | Pen/MDI | MDI-Nutzer | **In Entwicklung** | Intelligente Assistenz |
+
+**Komplementär, nicht konkurrierend:**
+- Pumpen-Nutzer → AndroidAPS/Loop (deutlich besser!)
+- MDI-Nutzer → T1D-DOSIS (füllt Lücke)
+
+---
+
+## Technologie-Stack
+
+**Android-App:**
+- Kotlin + Jetpack Compose
+- Room Database (lokale Speicherung)
+- Broadcast Receiver (Juggluco Integration)
+- Google Drive API (Cloud-Sync)
+- AlarmManager (intelligente Warnungen)
+
+**Desktop-Backend:**
+- Julia 1.9+
+- using DataFrames (Datenverarbeitung)
+- using Flux, MLJ (Machine Learning)
+- using GoogleDrive (Cloud-Sync)
+- using DifferentialEquations (Pharmakokinetik)
+
+**IPC-Protokoll (JSON via Google Drive):**
+
+REQUEST.json (Android → Cloud):
+{
+  "glucose_data": [...],
+  "insulin_injections": [...],
+  "meals": [...],
+  "current_factors": {
+    "isf": 40, "icr": 10, "basal": 16
+  }
+}
+
+RESPONSE.json (Desktop → Cloud):
+{
+  "optimized_factors": {...},
+  "dosing_recommendations": [...],
+  "alarm_thresholds": {...}
+}
+
+---
+
+## Für Entwickler & Forschende
+
+### Mitarbeit am Projekt
+
+**Gesucht werden:**
+- 👨‍💻 **Kotlin/Android Entwickler** (Broadcast-Handling, Room DB, UI)
+- 📊 **Julia/ML Experten** (Zeitreihen-Analyse, Optimierung, pharmakokinetische Modelle)
+- 🩺 **Medizinisches Feedback** (Diabetologen, erfahrene T1Ds zur Algorithmen-Validierung)
+- 🔬 **Wissenschaftler** (Studiendesign, statistische Validierung)
+- 🧪 **Beta-Tester** (Keine Programmierkenntnisse nötig! Nur: Erfahrung mit T1D + Bereitschaft zu testen)
+
+**Für Mitentwickler:**
+- GitHub Issues für technische Diskussionen
+- Code-Reviews und PRs willkommen
+- Feedback zu Algorithmen und Implementierung
+- Hinweise auf wissenschaftliche Literatur
+
+**Für Beta-Tester (später):**
+- Installation der fertigen App (kein Coding nötig)
+- Feedback zu Usability und Genauigkeit
+- Meldung von Bugs oder unplausiblen Empfehlungen
+- Geduld mit experimenteller Software
+
+### Akademische Nutzung
+
+**Dieses Projekt eignet sich für:**
+- Bachelor/Master-Arbeiten (ML in Diabetestherapie)
+- Forschungsprojekte (MDI-Optimierung)
+- Algorithmische Studien (Hypo-Prädiktion)
+- Vergleichsstudien (MDI vs. Closed-Loop)
+
+### Kommerzielle Weiterentwicklung
+
+**Interesse von Institutionen?**
+- Medizinprodukte-Hersteller
+- Forschungseinrichtungen
+- Universitätskliniken
+
+→ Kontakt über GitHub (sobald verfügbar)
+
+---
+
+## Verwandte Projekte
+
+### Inspiriert von / Kompatibel mit:
+
+**Juggluco** - CGM-Daten von Freestyle Libre
+- Website: https://www.juggluco.nl/Juggluco/index.html
+- T1D-DOSIS empfängt Broadcasts von Juggluco
+
+**GlucoDataHandler (GDH)** - Broadcast-Handling
+- Autor: pachi81 | Lizenz: MIT
+- Inspiration für Android-Architektur
+
+**OpenAPS / AndroidAPS / Loop** - Closed-Loop Systeme
+- Etablierte APS für Pumpen-Nutzer
+- Lizenzen: GPL-3 / AGPL / MIT
+- Komplementär zu T1D-DOSIS
+
+**xDrip+** - CGM-App mit IOB-Berechnung
+- Lizenz: GPL-3
+- **Hervorragende IOB-Berechnung** (wird in T1D-DOSIS übernommen)
+- Alternative CGM-Datenquelle (falls kein Juggluco)
+- Broadcast-kompatibel mit T1D-DOSIS
+
+---
+
+## Lizenz
+
+**GNU General Public License v3 (GPL-3)**
+
+**Begründung:**
+- Lebenskritische Algorithmen müssen transparent sein
+- Community-Verbesserungen kommen allen zugute
+- Kein proprietäres "Black Box" System
+
+**Bedeutet:**
+- ✅ Frei nutzbar, modifizierbar, verteilbar
+- ✅ Modifikationen müssen ebenfalls GPL-3 sein
+- ✅ Quellcode bleibt verfügbar
+- ❌ Keine proprietäre kommerzielle Nutzung
+
+---
+
+## Disclaimer & Wichtige Hinweise
+
+### Status: DIY-Projekt in Entwicklung
+
+T1D-DOSIS ist ein **Do-It-Yourself (DIY) Projekt** von T1D-Betroffenen für T1D-Betroffene:
+- ❌ Kein zertifiziertes Medizinprodukt (CE/FDA)
+- ❌ Keine klinischen Studien durchgeführt
+- ❌ Nicht von medizinischen Fachkräften validiert
+- ❌ Kein professioneller Support
+
+**Ähnlich wie:** OpenAPS, AndroidAPS, Loop – etablierte DIY-Systeme, die funktionieren und genutzt werden, aber nie medizinisch zertifiziert wurden oder werden.
+
+### Eigenverantwortung
+
+**Du bist selbst verantwortlich für:**
+- Die Entscheidung, dieses System zu bauen/nutzen
+- Das Verständnis aller Algorithmen und deren Validierung
+- Alle therapeutischen Entscheidungen
+- Die Zusammenarbeit mit deinem Diabetesteam
+
+**T1D-DOSIS gibt Empfehlungen, DU triffst Entscheidungen.**
+
+### Haftungsausschluss
+
+Der Autor übernimmt **keine Haftung** für:
+- Fehler in Software oder Algorithmen
+- Falsche Dosierungsempfehlungen
+- Medizinische Komplikationen
+- Schäden jeglicher Art
+
+**Nutzung erfolgt auf eigenes Risiko.**
+
+### Medizinischer Hinweis
+
+T1D-DOSIS ist **kein Ersatz** für:
+- Professionelle medizinische Beratung
+- Regelmäßige Diabetologen-Termine
+- Notfall-Protokolle bei Hyper/Hypo
+- Gesunden Menschenverstand
+
+**Bei medizinischen Fragen:** Konsultiere immer deinen Arzt.
+
+### Zertifizierung & Regulatorische Zulassung
+
+**Realität:** T1D-DOSIS wird höchstwahrscheinlich **nie** regulatorisch zugelassen werden.
+
+**Warum?**
+- Zulassung dauert Jahre und kostet Millionen
+- DIY-Projekte können diesen Aufwand nicht leisten
+- Ähnliche Systeme (OpenAPS, AndroidAPS, Loop) sind auch nicht zertifiziert
+
+**Aber:** Diese Systeme funktionieren, werden weltweit genutzt, und haben vielen Menschen geholfen – auf eigene Verantwortung.
+
+**T1D-DOSIS folgt diesem Modell.**
+
+---
+
+## Roadmap
+
+### Q4 2025
+- [x] Konzept finalisieren
+- [x] Dokumentation erstellen
+- [x] GitHub Repository einrichten
+- [x] Erste Code-Commits (Android Basics)
+- [ ] Android: Juggluco Broadcast-Empfänger
+- [ ] Android: Room Database Schema
+- [ ] Android: IOB-Berechnung
+- [ ] Julia: Datenparser für REQUEST.json
+- [ ] Google Drive API Integration
+
+### Q1-Q2 2026
+- [ ] Intelligente Hypo-Prädiktion (ML-Modell)
+- [ ] ISF/ICR-Optimierung aus historischen Daten
+- [ ] Android UI für Alarme und Empfehlungen
+- [ ] Erste Tests mit Simulationsdaten
+
+### Q3-Q4 2026
+- [ ] Umfangreiche Tests und Validierung
+- [ ] Alpha-Version für Selbsttest
+
+### 2027+
+- [ ] Community-Feedback integrieren
+- [ ] Iterative Verbesserungen
+- [ ] Dokumentation für DIY-Builder
+- [ ] Mögliche Publikation (wissenschaftlich)
+
+**Disclaimer:** Zeitpläne sind Schätzungen und können sich ändern.
+
+---
+
+## FAQ
+
+**Q: Wann kann ich T1D-DOSIS nutzen?**  
+A: Erste funktionsfähige Version vermutlich Mitte 2026. Aber: Selbsttest, keine Garantien.
+
+**Q: Ist das sicherer als AndroidAPS?**  
+A: Nein. Closed-Loop mit Pumpe ist überlegen. T1D-DOSIS ist nur für MDI-Nutzer sinnvoll.
+
+**Q: Brauche ich Programmierkenntnisse?**  
+A: **Als Nutzer:** Nein, nur Verständnis von T1D-Management. **Als Entwickler/Mitarbeiter:** Ja, Kotlin und/oder Julia.
+
+**Q: Wie installiere ich T1D-DOSIS?**  
+A: Noch nicht verfügbar. Später: APK-Download + einfache Installation wie bei jeder Android-App.
+
+**Q: Kostet es etwas?**  
+A: Nein. Open Source und kostenlos. Aber: Du brauchst Android-Gerät, PC, Google Drive.
+
+**Q: Kann ich helfen?**  
+A: Ja! Besonders gesucht: Kotlin/Julia-Entwickler, ML-Experten, medizinisches Feedback.
+
+**Q: Wird das jemals zertifiziert?**  
+A: Sehr unwahrscheinlich. Wie OpenAPS/AndroidAPS/Loop: DIY für immer.
+
+**Q: Was wenn es Fehler hat?**  
+A: Als **Nutzer** meldest du Bugs und prüfst Empfehlungen kritisch. Als **Entwickler** hilfst du beim Fixen. In beiden Fällen: Eigenverantwortung bei allen Dosierungsentscheidungen.
+
+**Q: Ist das kompliziert zu bedienen?**  
+A: Nein. Ziel ist eine intuitive App wie Juggluco oder xDrip+. Komplexität bleibt im Backend.
+
+---
+
+## Kontakt
+
+**GitHub:** [Wird ergänzt sobald Repository online]  
+**Diskussion:** GitHub Issues (für technische/algorithmische Fragen)  
+**Support:** Keiner. DIY = Do It Yourself.
+
+---
+
+**Letzte Aktualisierung:** Oktober 2025  
+**Status:** In Entwicklung (frühe Phase)  
+**Lizenz:** GPL-3  
+**Autor:** Persönliches DIY-Projekt
