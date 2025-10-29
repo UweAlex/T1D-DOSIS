@@ -13,7 +13,6 @@ T1D-DOSIS ist ein **DIY-Projekt** zur Optimierung der Insulintherapie bei **Mult
 Wenn du mit Pen spritzt und CGM nutzt, siehst du zwar deine Glukosewerte in Echtzeit, aber:
 - Standard-Alarme warnen oft zu spät (erst bei 70 mg/dl)
 - Closed-Loop-Systeme (AndroidAPS/Loop) funktionieren nur mit Pumpe
-- xDrip+ kennt dein aktives Insulin (IOB) nicht
 - Therapie-Faktoren (ISF, ICR) musst du manuell optimieren
 
 ### Die Lösung: Zwei Komponenten
