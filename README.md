@@ -354,30 +354,44 @@ RESPONSE.json (Desktop → Cloud):
 → Contact via GitHub (once available)
 
 ---
-
 ## Related Projects
 
 ### Inspired by / Compatible with:
 
 **Juggluco** - CGM data from Freestyle Libre  
 - Website: https://www.juggluco.nl/Juggluco/index.html  
+- GitHub: https://github.com/j-kaltes/Juggluco  
 - T1D-DOSIS receives broadcasts from Juggluco  
 
 **GlucoDataHandler (GDH)** - Broadcast handling  
 - Author: pachi81 | License: MIT  
+- GitHub: https://github.com/pachi81/GlucoDataHandler  
 - Inspiration for Android architecture  
 
-**OpenAPS / AndroidAPS / Loop** - Closed-loop systems  
+**OpenAPS** - Closed-loop systems  
 - Established APS for pump users  
-- Licenses: GPL-3 / AGPL / MIT  
+- License: GPL-3  
+- GitHub: https://github.com/openaps/oref0  
+- Complementary to T1D-DOSIS  
+
+**AndroidAPS** - Closed-loop systems  
+- Established APS for pump users  
+- License: AGPL-3.0  
+- GitHub: https://github.com/nightscout/AndroidAPS  
+- Complementary to T1D-DOSIS  
+
+**Loop** - Closed-loop systems  
+- Established APS for pump users  
+- License: MIT  
+- GitHub: https://github.com/LoopKit/Loop  
 - Complementary to T1D-DOSIS  
 
 **xDrip+** - CGM app with IOB calculation  
 - License: GPL-3  
+- GitHub: https://github.com/NightscoutFoundation/xDrip  
 - **Excellent IOB calculation** (adopted in T1D-DOSIS)  
 - Alternative CGM data source (if no Juggluco)  
-- Broadcast-compatible with T1D-DOSIS  
-
+- Broadcast-compatible with T1D-DOSIS
 ---
 
 ## License
