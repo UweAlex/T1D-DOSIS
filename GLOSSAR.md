@@ -1,6 +1,6 @@
 # Glossar zu Begriffen, Abkürzungen und Formeln im T1D-Management
 
-Dieses Glossar basiert auf den offiziellen Dokumentationen von OpenAPS, AndroidAPS und Loop. Es deckt die wichtigsten Begriffe, Abkürzungen und Faktoren ab, die in Algorithmen wie oref0/oref1 oder MPC für Dosing, Vorhersagen und Closed-Loop-Logik vorkommen. Fokussiert auf MDI-Optimierung (z. B. für T1D-DOSIS).
+Dieses Glossar basiert auf den offiziellen Dokumentationen von OpenAPS, AndroidAPS und Loop sowie T1D-spezifischen Leitlinien (z. B. DDG S3-Leitlinie). Es deckt die wichtigsten Begriffe, Abkürzungen und Faktoren ab, die in Algorithmen wie oref0/oref1 oder MPC für Dosing, Vorhersagen und Closed-Loop-Logik vorkommen. Fokussiert auf MDI-Optimierung (z. B. für T1D-DOSIS). Erweitert um T1D-spezifische Begriffe wie Spritz-Ess-Abstand und Leber-Glukose-Freisetzung (z. B. Gluconeogenese, Glykogenolyse und EGP).
 
 ## Inhaltsverzeichnis
 
@@ -9,6 +9,8 @@ Dieses Glossar basiert auf den offiziellen Dokumentationen von OpenAPS, AndroidA
 - [3. Carb- & Mahlzeit-Modelle](#3-carb--mahlzeit-modelle)
 - [4. System- & Modi](#4-system--modi)
 - [5. Sicherheits- & Anpassungs-Features](#5-sicherheits--anpassungs-features)
+- [6. T1D-spezifische Begriffe & Mahlzeitenmanagement](#6-t1d-spezifische-begriffe--mahlzeitenmanagement)
+- [7. Stoffwechselprozesse (Leber & Glukose-Freisetzung)](#7-stoffwechselprozesse-leber--glukose-freisetzung)
 - [Hinweise zur Nutzung in T1D-DOSIS](#hinweise-zur-nutzung-in-t1d-dosis)
 
 ## 1. Messwerte & Vorhersagen
@@ -63,10 +65,26 @@ Dieses Glossar basiert auf den offiziellen Dokumentationen von OpenAPS, AndroidA
 | **min_5m_carbimpact** | Minimum 5-Minute Carb Impact / Minimaler 5-Min-Carb-Impact | Default-Decay bei CGM-Lücken (z. B. 5–8g/5min). | Absorbed = min_5m_carbimpact × (t/5min). **Schritte**: Bei fehlendem BGI: Annahme für COB-Reduktion. |
 | **TBR** | Temporary Basal Rate / Temporäre Basalrate | Temporäre Änderung der BR (z. B. 120% für 30 Min.). | TBR = BR × Faktor (via BGI). **Schritte**: In Closed Loop: Automatisch; in MDI: Manuell simulieren. |
 
+## 6. T1D-spezifische Begriffe & Mahlzeitenmanagement
+
+| Abkürzung | Vollform (Englisch / Deutsch) | Beschreibung | Formel/Verwendung | Beispiel (mit Schritt-für-Schritt) | MDI-Relevanz für T1D-DOSIS |
+|-----------|-------------------------------|--------------|-------------------|------------------------------------|----------------------------|
+| **SEA** | Spritz-Ess-Abstand / Injection-Meal Interval | Zeitlicher Abstand zwischen Insulininjektion (Bolus) und Mahlzeitenbeginn. Kompensiert den verzögerten Insulin-Eintritt, um BG-Spikes zu vermeiden. Empfohlen: 15–30 Min je nach Insulin-Typ und Ausgangs-BG. | SEA = f(Insulin-Typ, aktueller BG). **Schritte**: 1. Bei schnellem Analoginsulin (z. B. Humalog): 15–20 Min vor Essen. 2. Bei höherem BG (>150 mg/dL): +10 Min verlängern. 3. Passe an Mahlzeit (fettig: Länger). Basierend auf Pharmakodynamik (Onset-Zeit). | **Szenario: Mittagessen mit 50g KH.** Aktueller BG = 120 mg/dL, schnelles Insulin. **Schritte**: 1. Berechne Bolus = 50 / ICR (z. B. 5 IE bei 1:10). 2. SEA = 20 Min (Onset ~15 Min). 3. Spritze um 12:00, esse um 12:20. **Ergebnis**: BG-Peak minimiert; ohne SEA: Spike auf 250 mg/dL möglich. | In MDI: Kern für manuelle Timing – App könnte warnen: "SEA 20 Min einhalten → Bolus jetzt, esse später." Integriere in Mahlzeit-Tracker für Vorhersagen. |
+| **Pre-Bolus** | Pre-Bolus / Vor-Spritze | Bolus vor der Mahlzeit (idealerweise mit SEA), um Kohlenhydrat-Aufnahme zu matchen. | Bolus = (KH / ICR) + Korrektur; Timing = SEA. **Schritte**: 1. Schätze KH. 2. Spritze vor Essen. 3. Erhöhe bei fettigen Mahlzeiten (verzögerte Absorption). | **Szenario: Frühstück.** KH = 40g, ICR = 1:8. **Schritte**: 1. Bolus = 40 / 8 = 5 IE. 2. Pre-Bolus 15 Min vor Essen. **Empfehlung**: Vermeidet Postprandial-Spike. | Für Pens: Ermutigt zu bewusstem Timing – T1D-DOSIS: "Pre-Bolus-Erinnerung: 15 Min vor Mahlzeit." |
+| **Post-Bolus** | Post-Bolus / Nach-Spritze | Bolus nach der Mahlzeit, z. B. bei ungenauer KH-Schätzung oder verzögerter Absorption (z. B. Protein/Fett). | Zusätzlicher Bolus = (aktueller BG - Target) / ISF, nach 1–2 Std. | **Szenario: Pizza (fettig).** Nach 90 Min: BG = 200 mg/dL. **Schritte**: 1. Korrektur = (200 - 100) / 40 = 2.5 IE. 2. Post-Bolus. **Empfehlung**: Bei > ICR-Anpassung. | MDI-spezifisch: Reduziert Injektionen via "bundled" – App: "Post-Bolus? Warte 45 Min für Bundle." |
+
+## 7. Stoffwechselprozesse (Leber & Glukose-Freisetzung)
+
+| Abkürzung | Vollform (Englisch / Deutsch) | Beschreibung | Formel/Verwendung | Beispiel (mit Schritt-für-Schritt) | MDI-Relevanz für T1D-DOSIS |
+|-----------|-------------------------------|--------------|-------------------|------------------------------------|----------------------------|
+| **EGP** | Endogenous Glucose Production / Endogene Glukoseproduktion | Übergeordneter Begriff für die Leberbasierte Freisetzung von Glukose ins Blut (aus Glykogen oder Neubildung), um Hypoglykämie zu verhindern. In T1D ungebremst durch fehlendes Insulin (z. B. Dawn-Phänomen). Wird in APS-Modellen (z. B. MPC) als Konstante geschätzt (ca. 1–2 mg/kg/min). | EGP = Glykogenolyse + Gluconeogenese. **Schritte**: 1. Bei niedrigem BG: Aktiviert via Glukagon. 2. In Modellen: Prognose = f(IOB, COB, EGP). 3. Schätzung: Basal-EGP ~80 mg/min (anpassbar). | **Szenario: Nachtfasten.** BG = 80 mg/dL. **Schritte**: 1. EGP steigt auf 1.5 mg/kg/min (ca. 100 mg/min). 2. Fügt ~6 mg/dL/h zum BG hinzu. **Ergebnis**: Erklärt Dawn-Rise auf 140 mg/dL ohne Carbs. | In MDI: Erklärt unerklärliche Rises – App: "EGP-Einfluss erkannt → Erhöhe Basal um 10% nachts." Integriere in PredBGs für bessere Prognosen. |
+| **Gluconeogenese** | Gluconeogenesis / Glukoneogenese | Neubildung von Glukose in der Leber aus Nicht-Kohlenhydraten (z. B. Aminosäuren aus Protein, Laktat aus Muskeln). Wichtig bei längerer Fasten; in T1D überaktiv, führt zu verzögerten BG-Anstiegen. | Glukose = Substrat (z. B. Alanin) → Pyruvat → Glucose-6-Phosphat → Glukose (via Glucose-6-Phosphatase). **Schritte**: 1. Trigger: Niedriger BG/Glukagon. 2. Energieintensiv (6 ATP/Molekül). 3. Beitrag: 50–90% der EGP nach 12h Fasten. | **Szenario: Protein-Mahlzeit.** 100g Steak (hohes Protein). **Schritte**: 1. Protein → Aminosäuren → Gluconeogenese. 2. Verzögerter BG-Anstieg nach 3–5 Std. **Ergebnis**: +50 mg/dL trotz Bolus – erklärt "versteckte" Hypos. | Für Pens: Passe ICR für Protein an – T1D-DOSIS: "Gluconeogenese-Effekt: +1 IE in 3h empfohlen." |
+| **Glykogenolyse** | Glycogenolysis / Glykogenolyse | Abbau gespeicherten Glykogens in der Leber zu Glukose (schneller Prozess). Hauptquelle für Glukose bei kurzer Fasten; in T1D unkontrolliert. | Glykogen → Glucose-1-Phosphat → Glucose-6-Phosphat → Glukose (via Glucose-6-Phosphatase). **Schritte**: 1. Enzym: Glykogen-Phosphorylase aktiviert. 2. Schnell (Minuten). 3. Beitrag: 20–50% der EGP anfangs. | **Szenario: Morgen nach Hypo.** Glykogenvorrat = 100g. **Schritte**: 1. Abbau: 10g/h → +60 mg/dL/h. 2. Somogyi-Rebound: Nach Nacht-Hypo → Hyper. **Ergebnis**: BG von 60 auf 180 mg/dL. | MDI-spezifisch: Erklärt Rebounds – App-Alarm: "Glykogenolyse-Risiko → Carbs + Basal-Reduktion." |
+
 ## Hinweise zur Nutzung in T1D-DOSIS
 
-- **Integrationstipps**: Starte mit Eventual BG als Baseline für Hypo-Alarme (wie in deiner Formel). Erweitere mit ML (Julia/Flux) für dynamische ISF (z. B. Zeit-of-Day-Anpassung).
-- **Sicherheit**: Alle Formeln sind konservativ (Puffer einbauen, z. B. +20% Carbs). Validiere mit Simulationen (z. B. OhioT1DM-Dataset).
-- **Quellen**: Basierend auf AndroidAPS-Glossar, OpenAPS-Docs und Loop-Glossar.
+- **Integrationstipps**: Starte mit Eventual BG als Baseline für Hypo-Alarme (wie in deiner Formel). Erweitere mit ML (Julia/Flux) für dynamische ISF (z. B. Zeit-of-Day-Anpassung). Für SEA/EGP: Integriere als Timer/Modelle in Android-App; EGP in PredBGs für nächtliche Prognosen.
+- **Sicherheit**: Alle Formeln sind konservativ (Puffer einbauen, z. B. +20% Carbs). Validiere mit Simulationen (z. B. OhioT1DM-Dataset). Stoffwechselprozesse immer individuell anpassen (z. B. via CGM-Feedback).
+- **Quellen**: Basierend auf AndroidAPS-Glossar, OpenAPS-Docs, Loop-Glossar, DDG-Leitlinien und Diabetes-Glossaren (z. B. diabinfo.de).
 
 **Zuletzt aktualisiert:** Oktober 2025
