@@ -6,6 +6,44 @@
 
 ---
 
+## Inhaltsverzeichnis
+
+- [What is T1D-DOSIS?](#what-is-t1d-dosis)
+  - [The Problem](#the-problem)
+  - [The Solution: Conceptual Components](#the-solution-conceptual-components)
+- [Who is it for?](#who-is-it-for)
+  - [Why Not Pump + Closed-Loop?](#why-not-pump--closed-loop)
+- [Architecture](#architecture)
+  - [Component 1: Conceptual Android App (Kotlin)](#component-1-conceptual-android-app-kotlin)
+  - [Why a Separate App?](#why-a-separate-app)
+  - [Component 2: Conceptual Desktop Backend (Julia)](#component-2-conceptual-desktop-backend-julia)
+  - [Component 3: Conceptual Cloud Sync (Google Drive API)](#component-3-conceptual-cloud-sync-google-drive-api)
+- [Development Status](#development-status)
+- [Technical Details](#technical-details)
+  - [IOB Calculation](#iob-calculation)
+  - [ISF Optimization](#isf-optimization)
+  - [Hypo Prediction](#hypo-prediction)
+  - [Glossar (GLOSSAR.md)](GLOSSAR.md)
+- [Positioning in the DIY Ecosystem](#positioning-in-the-diy-ecosystem)
+- [Technology Stack](#technology-stack)
+- [For Developers & Researchers](#for-developers--researchers)
+  - [Contributing to the Project](#contributing-to-the-project)
+  - [Academic Use](#academic-use)
+  - [Commercial Development](#commercial-development)
+- [Related Projects](#related-projects)
+- [License](#license)
+- [Disclaimer & Important Notes](#disclaimer--important-notes)
+  - [Status: Personal DIY Feasibility Study](#status-personal-diy-feasibility-study)
+  - [Personal Responsibility](#personal-responsibility)
+  - [Liability Disclaimer](#liability-disclaimer)
+  - [Medical Note](#medical-note)
+  - [Certification & Regulatory Approval](#certification--regulatory-approval)
+- [Roadmap](#roadmap)
+- [FAQ](#faq)
+- [Contact](#contact)
+
+---
+
 ## What is T1D-DOSIS?
 
 T1D-DOSIS is a **DIY conceptual project** to explore insulin therapy optimization for **Multiple Daily Injections (MDI)** – ideal for people using pens or syringes. As a personal feasibility study, it investigates how data-driven tools could enhance MDI for those not using pumps, but it remains in early ideation and is shared primarily as inspiration for the community.
@@ -214,6 +252,10 @@ This is not a software project in active development – it's a personal explora
 - **AI-Enhanced Methods**: Leverage machine learning (e.g., time-series models in Julia) for the best possible forecasts – integrating meal absorption, exercise effects, and personal patterns to enable the sparsest (minimal intervention), most targeted (precise dosing), and fastest (preemptive) responses.  
 - Extended horizons (15 min to hours), conservative thresholds (no pump safety net), and reduced false alarms via these layers.
 
+### Glossar (GLOSSAR.md)
+
+- [Glossar zu Begriffen, Abkürzungen und Formeln im T1D-Management](GLOSSAR.md): Detailliertes Glossar mit Erklärungen zu Schlüsselbegriffen wie BG, IOB, ISF, EGP und mehr, inklusive Formeln und Beispielen. Nützlich für tieferes Verständnis der technischen Details.
+
 ---
 
 ## Positioning in the DIY Ecosystem
@@ -251,7 +293,6 @@ This is not a software project in active development – it's a personal explora
 
 **IPC Protocol (JSON via Google Drive):**  
 
-REQUEST.json (Android → Cloud):  
 REQUEST.json (Android → Cloud):  
 {  
   "glucose_data": [...],  
