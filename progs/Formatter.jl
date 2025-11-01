@@ -6,12 +6,41 @@
 using JuliaFormatter # WICHTIG: Erlaubt den Aufruf des Standard-Formatters
 
 """
+Entfernt den speziellen Dateinamen-Header, falls vorhanden.
+Wird vor dem Aufruf von JuliaFormatter.format() ausgeführt, um Konflikte zu vermeiden.
+"""
+function remove_header_comment(filepath::String)
+    try
+        lines = readlines(filepath)
+        
+        # Prüfen, ob die erste Zeile mit unserem Marker beginnt
+        if !isempty(lines) && startswith(lines[1], "#Dateiname>>")
+            
+            # Schreibe die Datei neu, beginnend mit der zweiten Zeile
+            open(filepath, "w") do io
+                for i in 2:length(lines)
+                    println(io, lines[i])
+                end
+            end
+            println("Info: Vorheriger Dateinamen-Header wurde entfernt.")
+        end # if
+    catch e
+        println("WARNUNG: Konnte Header-Kommentar nicht entfernen: $e")
+    end # catch
+end # function remove_header_comment
+
+
+"""
 Führt zuerst den offiziellen JuliaFormatter auf der Datei aus und fügt danach
 automatisch Kommentare (z.B. `# if`, `# for`) zum 'end'-Schlüsselwort hinzu.
 
 @param filepath: Der Pfad zur zu formatierenden Julia-Datei.
 """
 function format_and_add_end_comments(filepath::String)
+    
+    # --- VORBEREITUNG: Entfernt den Header, falls er von einer früheren Ausführung existiert ---
+    remove_header_comment(filepath) 
+    
     println("--- SCHRITT 1: Standard-Formatierung durch JuliaFormatter.jl ---")
     
     try
@@ -37,14 +66,14 @@ function format_and_add_end_comments(filepath::String)
         "for " => "# for",
         "while " => "# while",
         "if " => "# if",
-        "elseif " => "# elseif/else block", # Muss nach if geprüft werden
+        "elseif " => "# elseif/else block", 
         "else" => "# else block",
         "try" => "# try",
         "catch" => "# catch block",
         "module " => "# module",
         "struct " => "# struct",
         "begin" => "# begin",
-        "do" => "# do" # Für anonyme Funktionen/Ressourcen
+        "do" => "# do" 
     )
 
     # 3. Zeilen durchlaufen und Kommentare hinzufügen
@@ -83,18 +112,17 @@ function format_and_add_end_comments(filepath::String)
                         # Wenn ein passender Block-Typ gefunden wurde, stoppe die Rückwärtssuche
                         if comment_added
                             break
-                        end
+                        end # if comment_added
 
-                    # Wir ignorieren Zeilen mit gleicher Einrückung (wie 'else' oder 'catch'),
-                    # da wir den Start des UMSCHLIESSENDEN Blocks (wie 'if' oder 'try') suchen.
-                    end
-                end 
+                    # Ignoriere Zeilen mit gleicher Einrückung wie 'else' oder 'catch'.
+                    end # if prev_indent
+                end # if not empty or comment
             end # for j (backward search)
             
             if !comment_added
                 println("WARNUNG: Konnte kein passendes Block-Keyword für 'end' in Zeile $i finden. (Keine Einrückungsstufe gefunden)")
                 line = line * " # block" # Füge einen allgemeinen Kommentar hinzu
-            end
+            end # if !comment_added
 
         end # if occursin end
 
@@ -103,9 +131,15 @@ function format_and_add_end_comments(filepath::String)
 
     # 4. Datei mit neuen Kommentaren überschreiben
     open(filepath, "w") do io
+        
+        # 4a. NEU: Den Dateinamen-Header als ERSTE Zeile hinzufügen
+        # Einfache Pfadextraktion, da wir hier kein "using Base" hinzufügen wollen
+        filename = last(split(filepath, ['/', '\\'])) 
+        println(io, "#Dateiname>> $filename") 
+        
         for line in new_lines
             println(io, line)
-        end
+        end # for line
     end # do open
 
     println("Gesamter Formatierungs-Workflow abgeschlossen für $filepath.")
