@@ -165,4 +165,128 @@ Juggluco berechnet **Insulin on Board (IOB)** als Schätzung der verbleibenden a
 #### 6. **Quellen und Hinweise**
    - Basierend auf klinischen Daten (z. B. Heise et al., 2020: Plasma-Insulin-Kurven für Glulisine). Der Code (open-source auf GitHub) implementiert dies wahrscheinlich via Lookup-Tabellen oder Fitting-Funktionen (z. B. in Java-Klassen für Kurven).
    - **Warnung**: IOB ist eine Schätzung – validiere mit deinem Arzt. Fehleingaben (z. B. falscher Typ) können zu Fehlentscheidungen führen.
+
+
+
+P.S.
+
+Technische IOB-Modellierung und Lispro-Kontext
+
+Dieser Text fasst die technische Definition von Insulin On Board (IOB) zusammen und beleuchtet die Implementierungsunterschiede zwischen DIY-Systemen (Nightscout/xDrip+) und empirisch basierten Apps (Juggluco), insbesondere im Hinblick auf Lispro (Humalog).
+
+1. Technische Definition und Herleitung
+
+IOB quantifiziert die verbleibende glukose-senkende Kapazität aus vorherigen Dosen, normalisiert auf die ISF (Insulin Sensitivity Factor, z. B. 40 mg/dL pro IE). Unter idealen Bedingungen (keine COB/EGP-Störungen) approximiert es die erwartete BG-Differenz:
+
+$$\text{IOB}(t) = \frac{\text{BG}_\text{aktuell}(t) - \text{BG}_\text{steady-state}}{\text{ISF}}$$
+
+BG_steady-state: Asymptotischer Endwert (z. B. 100 mg/dL bei rein basalem Gleichgewicht).
+
+Herleitung: Aus der PD-Gleichung $\frac{d\text{BG}}{dt} = -\frac{\text{IOB}(t)}{\text{ISF}}$, integriert über die DIA (Duration of Insulin Action, typ. 4–6 h).
+
+In der Praxis ist IOB modellbasiert, nicht messbar: Es summiert Beiträge multipler Dosen via biexponentieller Aktivitätskurve:
+
+$$\text{Beitrag}_i(t) = \text{Dosis}_i \cdot \left[ (1 - e^{-(t - t_i)/\tau_\text{up}}) \cdot e^{-(t - t_i - \text{Peak})/\tau_\text{down}} \right]$$
+
+mit $\tau_\text{up} \approx 30–60$ min (Aufbau), $\tau_\text{down} \approx 120–240$ min (Abbau), Peak $\approx 60–75$ min. Gesamt-IOB = $\sum_i \text{Beitrag}_i(t)$ für alle Dosen $i$ innerhalb DIA.
+
+2. Implementierung in Apps (zyklisch, listenbasiert)
+
+Speicherung als dynamische Liste von Events (z. B. MutableList<BolusEvent> in Kotlin):
+
+Event-Struktur: {amount: Double, timestamp: Long, type: String}.
+
+Zyklische Berechnung (alle 1–5 min, getriggert von CGM-Broadcast): Filtere Liste auf DIA-Fenster, iteriere und summiere.
+
+Beispiel in Kotlin (für T1D-DOSIS-ähnlich):
+
+fun updateIOB(events: MutableList<BolusEvent>, currentTime: Long, isf: Double): Double {
+    val diaMs = 6 * 60 * 60 * 1000L  // 6 h
+    val relevant = events.filter { currentTime - it.timestamp < diaMs }
+    return relevant.sumOf { event ->
+        val ageMin = (currentTime - event.timestamp) / 60_000.0
+        event.amount * biexponentialActivity(ageMin, peakMin = 75.0, diaMin = 360.0)
+    } / isf // Normalisiert für Prognose
+}
+
+
+CGM-Werte (z. B. aus Juggluco) triggern den Refresh, korrigieren aber IOB nicht direkt – sie dienen der Validierung (z. B. via BG-Trend-Anpassung von ISF).
+
+Peak-Dynamik:
+
+Der maximale $|\text{dBG/dt}|$ und $|\text{dIOB/dt}|$ koindizieren am Peak (ca. 60–75 min), wo die Kurve am steilsten ist: Fallrate $\approx -3$ mg/dL/min bei 2 IE-Dosis. Multi-Injektionen erhöhen das Risiko exponentiell durch Überlappung.
+
+3. Ergänzung: IOB-Prognose in DIY-Systemen (xDrip+/Nightscout sIAp)
+
+xDrip+ (die Nightscout-Version von xDrip) berechnet und prognostiziert Insulin on Board (IOB) als Teil seiner Simulations- und Vorhersagefunktionen für Blutzucker (BG)-Kurven.
+
+Modell: Nightscout sIAp (Glockenkurve)
+
+xDrip+ verwendet ein biexponentielles Modell (auch sIAp-Modell oder Glockenkurve genannt), das die reale Insulin-Pharmakokinetik nachahmt. Dieses Modell wird auch in der juggluco_fetcher.jl-Datei verwendet, um IOB zu schätzen, da Juggluco den internen Wert nicht über die API bereitstellt.
+
+Parameter für Lispro (Humalog 100/200):
+| Parameter | Beschreibung | Typischer Wert |
+| :--- | :--- | :--- |
+| DIA | Duration of Insulin Action | 360 Minuten (6 Stunden) |
+| TTP | Time to Peak (Wirkungsmaximum) | 75 Minuten |
+
+Kernformel:
+
+Für jede Insulindosis $ i $ (in IE) zu Zeit $ t $ (Minuten seit Bolus):
+
+Die Berechnung verwendet Zeitkonstanten $\tau$ und $a$, die aus TTP und DIA abgeleitet werden.
+
+$\text{IOB} = \text{Dosis} \times (1 - \text{Activity Factor})$
+
+$$\text{Activity Factor} = \frac{2 \cdot t \cdot \tau - t^2}{\tau \cdot \text{DIA}}$$
+
+Gesamt-IOB = Summe aller IOB-Beiträge über alle offenen Behandlungen (basal + bolus) innerhalb der DIA.
+
+4. Ergänzung: IOB-Berechnung in Juggluco (Empirische PK-Kurven)
+
+Juggluco berechnet IOB nicht über das sIAp-Modell, sondern als Schätzung der verbleibenden aktiven Insulinmenge im Blut basierend auf empirischen, datenbasierten pharmakokinetischen (PK) Kurven aus klinischen Studien.
+
+Modell: Empirisch-Pharmakokinetisch
+
+Keine geschlossene algebraische Formel: Juggluco verwendet tabellierte Datenpunkte oder interpolierte Kurven (z. B. via Wolfram Mathematica für Plots), die den IOB-Decay modellieren.
+
+Typ-Spezifisch: Die Kurve ist seit Version 9.2.0 wählbar und hängt vom Insulin-Typ ab (z. B. Aspart/NovoRapid, Glulisine/Apidra). Konzentriertes Lispro 200 (Humalog) verwendet in der Regel dasselbe oder ein sehr ähnliches Wirkprofil wie Lispro 100.
+
+Peak-Zeitpunkt: Der Peak ist typischerweise schneller als bei sIAp-Modellen und liegt oft bei ca. 15–20 Minuten, gefolgt von einem sehr langen Abfall (bis zu 6–8 Stunden).
+
+Empirische Datenpunkte für den Decay (Glulisine, beispielhaft)
+
+Zeit (min)
+
+IOB (arbiträre Einheiten)
+
+Anmerkung
+
+5
+
+1896
+
+Früher Anstieg
+
+15
+
+3390 (Peak)
+
+Max. Aktivität
+
+60
+
+1338
+
+
+
+360
+
+112.02
+
+Noch ~11 % aktiv nach 6 Std.
+
+Fazit zur IOB-Berechnung:
+
+Die IOB-Schätzung ist reines Rechnen, eine skalierbare, prognostische Variable. Da die Juggluco-API den internen, empirischen IOB-Wert nicht herausgibt, ist die Verwendung der Nightscout-sIAp-Glockenkurve mit Lispro-Parametern (DIA=360, TTP=75) die genaueste verfügbare Näherung in DIY-Integrationen.
    - Für Code-Details: Schau in die Juggluco-Repo (z. B. Dateien mit „IOB“-Suche).
