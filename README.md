@@ -38,6 +38,7 @@
   - [Liability Disclaimer](#liability-disclaimer)
   - [Medical Note](#medical-note)
   - [Certification & Regulatory Approval](#certification--regulatory-approval)
+- [Implementation Plan](#implementation-plan)
 - [Roadmap](#roadmap)
 - [FAQ](#faq)
 - [Contact](#contact)
@@ -354,6 +355,7 @@ RESPONSE.json (Desktop → Cloud):
 → Contact via GitHub (once available)
 
 ---
+
 ## Related Projects
 
 ### Inspired by / Compatible with:
@@ -469,6 +471,63 @@ T1D-DOSIS is **not a substitute** for:
 
 ---
 
+## Implementation Plan
+
+To rapidly reach a halfway usable system (MVP) focused on IOB/ISF for syringe users with Compression Low handling, follow this 4-week plan. It starts with data collection (your Step 1) and builds a rule-based Bolus-Advisor, testable on Juggluco TSV and OhioT1DM MD-subset (syringe-only data). Use Julia for desktop analysis and a simple Android app for real-time input. Goal: By Week 4, a tool that suggests Bolus, tracks IOB, and filters Lows (~85–90% accuracy, RMSE <1.0 mmol/L).
+
+### Week 1: Data Security & Setup (Download & Organization)
+- **1.1: Download Juggluco Data**  
+  Install Juggluco v9.7.7 (Play Store or APK from juggluco.nl). Export 7–14 days TSV (glucose_mmol, timestamp, roc); note manual Bolus (U, Carbs g, Timing) via app notes or separate CSV. Save as `syringe_bolus_week1.tsv`.  
+- **1.2: Secure Study Data (Syringe-Focused)**  
+  OhioT1DM MD-subset (manual injections): Kaggle (kaggle.com/datasets/ryanmouton/ohiot1dm – CSV with CGM/Bolus/Carbs, filter "MD"). AZT1D MD-subset: Mendeley (data.mendeley.com/datasets/gk9m674wcx/1 – CSV, select "manual_injection"). Local storage in `/data/syringe/`; test Julia import: `using CSV; df = CSV.read("ohio_md.csv", DataFrame)`.  
+- **Output**: 5–10 GB folder; Julia import script.  
+- **Time**: 2–3 hours; Metric: 100% data integrity.
+
+### Week 2: Build Basemodel (IOB/ISF + Low Detection, Syringe-Only)
+- **2.1: Implement IOB/ISF Logic (Julia)**  
+  IOB: Bolus-only (IOB(t) = ∑ Bolus * e^{-t/4}). ISF = 100 / TDD (estimate from TSV Bolus sum/day). Advisor: (BG - Target) / ISF - IOB + Carbs / ICR.  
+  Code Snippet (Julia):  
+  using DataFrames, Dates  
+  function spray_iob_isf_advisor(df::DataFrame, bolus_u::Float64, carbs_g::Float64, timing::DateTime, tdd::Float64=30.0)  
+      isf = 100 / tdd / 18  # mmol/L  
+      time_diff = Dates.value(now() - timing) / 3600  
+      iob = bolus_u * exp(-time_diff / 4.0)  
+      recent = df[end-3:end, :glucose_mmol]  
+      if length(recent) >1 && (recent[end] - recent[end-1] < -1.1) && any(diff(recent) > 0.3)  
+          println("Low detected – pause Bolus!")  
+          return 0.0, 0.0  
+      end  
+      icr = 10.0  
+      carb_bolus = carbs_g / icr  
+      current_bg = df[end, :glucose_mmol]  
+      target = 5.5  
+      correction = (current_bg - target) / isf  
+      total = max(0, carb_bolus + correction - iob)  
+      return total, iob  
+  end  
+- **2.2: Mobile Prototype (Android)**  
+  UI: Input fields for Bolus/Carbs; Button → Calculation (local or JSON from Julia). Low filter from Juggluco stream.  
+- **Output**: Working script + app sketch; RMSE <1.0 on Ohio MD.  
+- **Time**: 8–12 hours; Metric: 80% accurate suggestions.
+
+### Week 3: Tests & Adjustment (Real-Data Loop)
+- Collect 1-week TSV with manual Bolus notes.  
+- Validate: Compare predictions vs. actual BG (e.g., 85% correct).  
+- Adjust ISF dynamically (day/night variation).  
+- **Output**: Calibrated prototype; app with alarms.  
+- **Time**: 6–10 hours; Metric: CEG >90% A+B.
+
+### Week 4: MVP Finalization & Next Steps
+- Automate: Julia cron for weekly ISF update from TSV.  
+- App: Build APK with IOB tracker ("Next Bolus in 2h recommended").  
+- Extension: Add Carbs photo recognition (Google ML Kit).  
+- **Output**: Deployable MVP; GitHub repo with code/data.  
+- **Time**: 5–8 hours; Metric: TIR >70% in simulations.
+
+**Risks & Tips**: Start with OhioT1DM MD for quick tests (has Bolus data). Budget: 0€. For manual Bolus, use app notes or CSV – no pump needed.
+
+---
+
 ## Roadmap
 
 ### Q4 2025  
@@ -486,7 +545,7 @@ T1D-DOSIS is **not a substitute** for:
 - [ ] Intelligent hypo prediction (ML model)  
 - [ ] ISF/ICR optimization from historical data  
 - [ ] Android UI for alarms and recommendations  
-- [ ] Initial tests with simulation data  
+- [ ] Extensive testing with simulation data  
 
 ### Q3-Q4 2026  
 - [ ] Extensive testing and validation  
@@ -547,4 +606,4 @@ A: Irrelevant for now. Goal is an intuitive app like Juggluco or xDrip+. Complex
 **Last Update:** October 2025  
 **Status:** Conceptual Feasibility Study (Early Phase)  
 **License:** GPL-3  
-**Author:** Personal DIY Exploration  
+**Author:** Personal DIY Exploration
