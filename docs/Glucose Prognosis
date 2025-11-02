@@ -1,0 +1,126 @@
+# **Umfassende Gliederung: CGM-Glukosevorhersage bei Typ-1-Diabetes (Stand November 2025)**
+
+
+## I. Einleitung und Grundlagen
+   - **Eröffnung (Stand 2025)**: CGM-Vorhersage revolutioniert Diabetes-Management – autonome Closed-Loop-Systeme erreichen 95% TIR, FDA genehmigt erste AI-CGM-Hybride wie Signos (Aug 2025).
+   - **Definition und Relevanz**: Kontinuierliche Glukosemonitoring (CGM) als Basis für prädiktive Algorithmen; Auswirkungen auf Typ-1-Diabetes (z. B. Reduktion von Hypo-/Hyperglykämien durch TIR-Metriken).
+   - **Historische Entwicklung**: Von einfachen Regressionsmodellen (Klassisch, <2020) zu AI-dominierten Systemen (State-of-the-Art, 2024–2025; Etabliert 2020-2023: CGM-Integration in Pumpe-Systeme).
+   - **Zielsetzung**: Vorhersage von Glukosewerten (15–120 Min. Horizonte) für Alarme, Closed-Loop und personalisierte Therapie.
+   - **Querverweis**: Zu II (Datenaufarbeitung) und III (Features); vgl. XIV (Trends) für Timeline; **Tiefe-Tipp**: Lies ADA-Guidelines 2025 für klinische Relevanz.
+
+## II. Datenaufarbeitung und Qualitätskontrolle (2025-Standard-Pipeline)
+   - **Allgemeine Prinzipien** (Etabliert 2020-2023, erweitert 2025): Fokussierte Pipeline-Schritte (Validierung, Artefakt-Detektion, Imputation/Resampling, Feature-Engineering); Qualitätsmetriken (SNR >10 dB, MDR <20%); Ziel: Bias-Minimierung in TIR/CEG; Neu: Edge-Tools wie CGM Data Analysis 2.0 (FDA-Pattern-Recognition). → Tabelle: Pipeline-Überblick.
+   - **Compression Lows (Artefakte durch Druck)** (State-of-the-Art 2024-2025):
+     - Ursachen/Häufigkeit (10-15% nächtlich); Detektion (KI-basiert, F1-Score >0,95); Korrektur (Interpolation/Flagging); Impact: +10% RMSE vs. Baseline (0,3 mmol/L).
+     - Prävention: Sensor-Positionierung; Dexcom G8-Reduktion.
+   - **Fehlende Werte (Missing Data)** (Etabliert 2020-2023):
+     - Ursachen/Häufigkeit (bis 30%); Imputationsmethoden (Spline/FDA, LSTM-Imputer); RMSE-Reduktion: 10-25% vs. Delete-Methode.
+     - Bewertung: MRB <1% bei <2% Missing; Unsicherheits-Schätzungen (Gaussian Processes).
+     - → Tabelle: Imputationsvergleich.
+   - **Unregelmäßige Zwischenzeiten (Irregular Sampling)** (State-of-the-Art 2024-2025):
+     - Ursachen (Übertragungsstörungen); Resampling (FDA-Glättung, Attention-Resampler); MAE-Impact: +8% vs. Baseline (0,5 mmol/L).
+   - **Integration und Best Practices**: Als Input-Layer (z. B. vor LSTM); Tools (Dexcom Clarity, CGM-Freq); >95% Qualität vor Training.
+   - **Querverweis**: Zu III (ROC-Engineering), XI.A (Rauschen-Handling); **Tiefe-Tipp**: Julia-Code für FDA-Glättung (DSP.jl) – siehe Implementierungsplan.
+
+## III. Kritische Eingabevariablen (Features)
+   - **Primäre Features** (Klassisch <2020): Historische CGM-Werte (60-120 Min.), Rate of Change (ROC), Tageszeit.
+   - **Sekundäre Features** (Etabliert 2020-2023): Aktivität, Herzfrequenz, Insulindaten, Kohlenhydrataufnahme.
+   - **Fortgeschrittene Features** (State-of-the-Art 2024-2025): Chronobiologie, Virtual-CGM, Stress-Indikatoren, Schlafphasen; Effekt: 20–30% RMSE-Reduktion vs. CGM-allein (Baseline: 0,8 mmol/L).
+   - **Post-Preprocessing-Engineering**: Ableitung aus II (z. B. ROC aus FDA-Glättung).
+   - **Querverweis**: Zu II (Preprocessing), IV-VII (Modelle), VII (Feature-Importance in Ensembles); **Tiefe-Tipp**: Tabellen zu Multimodal-Fusion (z. B. +25% mit Herzfrequenz).
+
+## IV. Physiologische und Mechanistische Modelle
+   - **Klassische Ansätze** (Klassisch <2020): AR/ARIMA (Baseline-RMSE: 1,5-2,0 mmol/L für 30 Min.); Bergman Minimal Model/UVA/Padova-Simulator.
+   - **Neue Entwicklungen** (State-of-the-Art 2024-2025): PINNs (15% bessere Generalisierung, RMSE: 1,0-1,2 mmol/L vs. Baseline); AI-erweiterte Simulatoren (Dexcom G7/Omnipod 5); Transfer Learning (Kalibrierung -50%).
+   - **Vorteile/Nachteile**: Interpretierbarkeit vs. Parameterschätzung.
+   - **Querverweis**: Zu VII (Ensembles), X (Personalisierung); II (Rauschunterdrückung); **Tiefe-Tipp**: UVA/Padova-Simulator-Download für Tests (uvapadova.org).
+
+## V. Klassische Machine-Learning-Methoden
+   - **SVM** (Etabliert 2020-2023): Hypoglykämie-Klassifikation; Hybride mit Kalman (2025).
+   - **Random Forest/Gradient Boosting**: XGBoost (F1-Score 0,92, RMSE: 0,8-1,0 mmol/L vs. Baseline 1,2 mmol/L); Stärken: Interpretierbarkeit.
+   - **Gaussian Processes** (State-of-the-Art 2024-2025): Unsicherheitsschätzungen; Chronobiologie (15% RMSE-Reduktion vs. Standard-GP).
+   - **Querverweis**: Zu VI (Deep Learning), X (Metriken); III (Features); **Tiefe-Tipp**: XGBoost-Feature-Importance für Juggluco-TSV.
+
+## VI. Deep-Learning-Methoden (State-of-the-Art)
+   - **LSTM** (Etabliert 2020-2023): RMSE <0,3 mmol/L (15 Min.); FDA-Integration (10–20% Steigerung vs. Vanilla-LSTM).
+   - **CNN**: Hybride CNN-LSTM (>98% CEG Zone A); Artefakt-Detektion (II.A).
+   - **GRU**: Edge-Effizienz (30% kürzere Training vs. LSTM).
+   - **Transformer** (State-of-the-Art 2024-2025): RMSE ~1,1 mmol/L (60 Min.); Chronobiologische Attention (20% Steigerung vs. LSTM).
+   - **Querverweis**: Zu II (Resampling), VIII (Anwendungen); **Tiefe-Tipp**: Flux.jl-Beispiele für LSTM in Julia (für Desktop-Analyse).
+
+## VII. Ensemble- und Hybrid-Methoden
+   - **Multi-Modell-Fusion** (State-of-the-Art 2024-2025): LSTM-XGBoost (RMSE 0,65 mmol/L vs. Einzelmodell 0,8 mmol/L); Physik-informierte Ensembles (15% RMSE-Reduktion bei Generalisierung).
+   - **Voting/Stacking**: Robustheit für Sicherheit.
+   - **Querverweis**: Zu XIV (Trends), XI (Herausforderungen); III (Feature-Importance); **Tiefe-Tipp**: MLJ.jl in Julia für Ensembles.
+
+## VIII. Erfolgreichste Methoden nach Anwendungsbereich (Synthese)
+   - **Synthese-Überblick**: Basierend auf IV-VII; Fokus: Optimale Zuordnung zu Horizonten/Anwendungen.
+   - **Kurzzeit (15–30 Min.)**: LSTM-Kalman-FDA (RMSE <0,3 mmol/L, >99% CEG); Verweis: VI + II.A; Besonderheit: FDA-Boost.
+   - **Mittelfrist (45–60 Min.)**: Transformer-Ensembles (RMSE 1,2 mmol/L, >95% CEG); Verweis: VI.
+   - **Hypoglykämie**: XGBoost-LSTM (F1 0,92–0,95); Verweis: V + VII.
+   - **Nächtlich**: CNN-LSTM/Random Forest (F1 96–98%); Verweis: V + II.A.
+   - **→ Tabelle 8.1: Methodenvergleich nach Anwendungsbereich**
+     | Anwendung | Top-Methode | RMSE (30 Min.) | CEG A+B | Verweis | Besonderheit |
+     |-----------|-------------|----------------|---------|---------|--------------|
+     | Kurzzeit  | LSTM-Kalman-FDA | <0,3 mmol/L | >99% | VI+II.A | Rauschunterdrückung |
+     | Mittelfrist | Transformer | 1,2 mmol/L | >95% | VI | Attention-Kontext |
+     | Hypoglykämie | XGBoost-LSTM | N/A (F1 0,92) | 95% | V+VII | Event-Robustheit |
+     | Nächtlich | CNN-LSTM | 0,5 mmol/L | 98% | V+II.A | Artefakt-Handling |
+   - **Querverweis**: Zu X (Metriken), XIII (Validierung); **Tiefe-Tipp**: Benchmarks auf OhioT1DM (für Juggluco-Tests).
+
+## IX. Personalisierung – Essentiell für Klinische Anwendung
+   - **Notwendigkeit**: Inter-individuelle Variabilität (Faktor 2-3 in RMSE vs. generisch); Zeitliche Änderungen (z. B. Saisonalität).
+   - **Methoden (2025-Standard)** (State-of-the-Art 2024-2025): Transfer Learning (70–80% Datenreduktion vs. Scratch-Training); Meta-Learning (<1 Woche); Federated Learning; Online/Evidential DL (Unsicherheit >20% Reduktion falscher Alarme).
+   - **Querverweis**: Zu VII (Ensembles), XIV (Trends); II.B (Personalisierte Imputation); **Tiefe-Tipp**: Meta-Learning in Julia (MLJ.jl).
+
+## X. Leistungsmetriken und Bewertung
+   - **Numerische Genauigkeit** (Technisch): RMSE/MAE/MAPE (0,3-1,5 mmol/L; Baseline: 1,8 mmol/L).
+   - **Klinische Sicherheit** (Ärzte/Patienten): CEG (>95% A+B), TIR (>70%); Usability (Alarm-Fatigue-Reduktion >20% durch personalisierte Schwellen).
+   - **Ereignis-Vorhersage**: Sensitivität/Spezifität/F1 (>0,90), Lead Time (>30 Min.).
+   - **Querverweis**: Zu VIII (Methoden), XIII (Validierung); II (SNR-Integration); **Tiefe-Tipp**: CEG-Implementierung in Python/Julia (open-source Skripte).
+
+## XI. Herausforderungen und Lösungen (2025) – Erweitert
+   - **Datenvariabilität & Rauschen** (XI.A): Kalman/FDA; Spezifisch: II.A-C.
+   - **Mahlzeiten/Aktivität** (XI.B): Attention/Lagged Features.
+   - **Ethik und Bias** (XI.C, State-of-the-Art 2024-2025): Algorithmische Verzerrungen (z. B. Populationsbias in TIR-Schätzungen); Lösungen: Fairness-Audits, IDF-Equity-Prinzipien; Verweis: XIV (Zukunft).
+   - **Praktische Aspekte** (XI.D): 
+     - Alarm-Fatigue (Prävalenz >30% in CGM-Nutzern, führt zu +0,5% A1C; Lösungen: Adaptive Schwellen, FreeStyle Libre 2-Alarme).
+     - User Experience Design (z. B. intuitive Apps).
+     - Technische Limitationen (Batterie: 7-14 Tage; Sensorlebensdauer: 10-14 Tage).
+     - Interoperabilität (FHIR-Standards).
+   - **Generalisierung** (XI.E): Domain Adaptation/PINNs.
+   - **Querverweis**: Zu II (Preprocessing), XII (Regulatorik); **Tiefe-Tipp**: Studien zu Alarm-Fatigue (ADA 2025).
+
+## XII. Regulatorische und Implementierungsaspekte
+   - **Regulatorik** (XII.A, State-of-the-Art 2025): FDA/CE-Zulassungen (z. B. Signos AI-CGM Aug 2025, Omnipod 5 für T2 Jul 2025); SaMD-Richtlinien (Zulassungsstudien >6 Monate).
+   - **Kosten und Ressourcen** (XII.B): 
+     - Entwicklung: 200-500k USD (ML-Team, 12-18 Monate).
+     - CGM-Hardware pro Patient: 1.200-3.600 USD/Jahr (Sensoren 40-90 USD/Stück, 2-3/Monat).
+     - Cloud-Inferenz: 0,01-0,05 USD/Vorhersage; Edge-Device: 150-300 USD einmalig.
+     - → Tabelle: Kostenübersicht.
+   - **Querverweis**: Zu XI.C (Ethik), XIII (Validierung); XIV (Trends); **Tiefe-Tipp**: FDA-SaMD-Guidelines für DIY-Apps.
+
+## XIII. Klinische Validierung und Best Practices
+   - **Studiendesign**: Prospektiv/Cross-Population/Real-World/Langzeit (>3 Monate); Preprocessing-Validierung (Artefakt-Raten <10%).
+   - **Implementierungen** (2025): Schwangerschaft (>98% CEG), Closed-Loop (92% Hypo-Reduktion), Pädiatrie (95% TIR).
+   - **Querverweis**: Zu X (Metriken), XII.A (Zulassungsstudien); **Tiefe-Tipp**: Real-World-Studien (z. B. T1D Exchange 2025).
+
+## XIV. Aktuelle Trends und Zukunftsperspektiven (2025+)
+   - **Autonome Closed-Loop**: Omnipod 5/Tandem Control-IQ (95% TIR).
+   - **Edge-AI/Multimodale Fusion**: 20–30% Steigerung; Echtzeit-Preprocessing (II).
+   - **Virtuelle CGM** (State-of-the-Art 2024-2025): RMSE <1 mmol/L aus Wearables; Demokratisierung.
+   - **Federated Learning/XAI/Präzisionsmedizin**: Genotyp/EHR-Integration; Zukünftige Ethik-Herausforderungen (XI.C).
+   - **Querverweis**: Zu VII (Hybride), IX (Personalisierung); **Tiefe-Tipp**: xAI-API für Federated Learning (x.ai/api).
+
+## XV. Zusammenfassung und Empfehlungen
+   - **Top-Methoden**: LSTM-Kalman-FDA (Kurzzeit), Transformer (Mittelfrist), etc.; Basis: II + III.
+   - **Kritischer Faktor**: Multimodalität/Personalisierung/Datenqualität; Ethik/Regulatorik als Enabler.
+   - **Kernbotschaft**: AI-Revolution; Autonome Systeme für 95% TIR – mit Fokus auf XI.D (UX).
+   - **Querverweis**: Zu allen; vgl. XVI (Anhang); **Tiefe-Tipp**: Starte mit OhioT1DM für Hands-on.
+
+## XVI. Anhang
+   - **XVI.A Glossar und Definitionen**: TIR (Time in Range), PINNs (Physik-informierte NN), CEG (Clarke Error Grid).
+   - **XVI.B Öffentliche Datensätze**: OhioT1DM (longitudinal, CGM+Insulin; URL: ohiot1dm.org), AZT1D (Real-World; URL: azt1d.org), Glucose-ML (10 Datasets 2018–2025; URL: glucose-ml.org), T1DEXI (EU; URL: t1dexchange.org).
+   - **XVI.C Software-Ökosystem**: Open Source (CGM-Freq Preprocessing, PyTorch DL); Proprietär (Dexcom Clarity); Checkliste: "Validiere MDR <20%, teste CEG >95%".
+   - **XVI.D Vergleichstabellen**: Aus VIII (8.1), II.B (Imputation), XII.B (Kosten).
+
