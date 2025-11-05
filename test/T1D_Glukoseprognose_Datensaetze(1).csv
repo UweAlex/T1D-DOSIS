@@ -1,9 +1,8 @@
 Rang;Name;Quelle;Patienten;Dauer;Modalitäten;Zugangsanforderung;Relevanz (1–5);Empfohlene Nutzung
-1;OhioT1DM Dataset;https://webpages.charlotte.edu/rbunescu/data/ohiot1dm/OhioT1DM-dataset.html;12;8 Wochen;CGM, Insulin, Mahlzeiten, Aktivität, Schlaf;Data Use Agreement (Anfrage erforderlich);5;"Benchmark für Glukosevorhersage; Modellvergleich (LSTM, TCN, Transformer)"
-2;DiaTrend Dataset;https://www.synapse.org/Synapse:syn38187184;54;27.561 Tage (gesamt);CGM, Insulinpumpen, Aktivität, Tagebuchdaten;Registrierung (Synapse);5;Langzeitmodellierung, Transfer Learning, Chronische Trends
-3;T1DiabetesGranada Dataset;https://data.niaid.nih.gov/resources?id=zenodo_10050943;736;4 Jahre (257.780 Tage);CGM;Frei verfügbar (Zenodo);4;Population-Level-Analysen, Baseline-Modelle
+0;OhioT1DM Dataset;https://webpages.charlotte.edu/rbunescu/data/ohiot1dm/OhioT1DM-dataset.html;12;8 Wochen;CGM, Insulin, Mahlzeiten, Aktivität, Schlaf;Data Use Agreement (Anfrage erforderlich);5;"Benchmark für Glukosevorhersage; Modellvergleich (LSTM, TCN, Transformer)"
+0;DiaTrend Dataset;https://www.synapse.org/Synapse:syn38187184;54;27.561 Tage (gesamt);CGM, Insulinpumpen, Aktivität, Tagebuchdaten;Registrierung (Synapse);5;Langzeitmodellierung, Transfer Learning, Chronische Trends
+0;T1DiabetesGranada Dataset;https://data.niaid.nih.gov/resources?id=zenodo_10050943;736;4 Jahre (257.780 Tage);CGM;Frei verfügbar (Zenodo);4;Population-Level-Analysen, Baseline-Modelle
 4;HUPA-UCM Dataset;https://data.mendeley.com/datasets/3hbcscwz44;25;≥14 Tage;CGM, Insulin, Mahlzeiten, Aktivität;Frei verfügbar (Mendeley);4;Feintuning, Kurzzeit-Prognosemodelle, Cross-Validation
 5;D1NAMO Dataset;https://zenodo.org/records/1421616;Mehrere (T1D);n/a;CGM, Insulin, Mahlzeiten, EKG;Frei verfügbar (Zenodo/Kaggle);4;Multimodale Deep-Learning-Modelle (Sensorfusion)
 6;AZT1D Dataset;https://arxiv.org/abs/2506.14789;25;n/a;CGM, Insulin, AID-Systemstatus;Auf Anfrage (Forschungsteam);3;AID-Systemanalyse, adaptive Kontrolle, Closed-Loop-Forschung
 7;UVA/Padova Type 1 Diabetes Simulator;https://tegvirginia.com/t1dms/;30;Simuliert (beliebig);synthetische CGM-/Insulin-Daten;Frei verfügbar (Simulation);3;Vortraining, Testen von Modellen ohne Realdaten
-8;T1D4Real (synthetic);https://arxiv.org/abs/2409.08132;synthetisch;10.000+ Tage (simuliert);CGM (synthetisch, auf realen Profilen basierend);Frei verfügbar;2;Pipeline-Tests, ablation studies, Modellrobustheit
