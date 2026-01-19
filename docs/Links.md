@@ -29,4 +29,13 @@ Hier die aktualisierte Liste der 6 relevanten Quellen. Ich habe für jede einen 
 6. **Afsaneh, E., Sharifdini, A., Ghazzaghi, H., & Zarei Ghobadi, M. (2022). Recent applications of machine learning and deep learning models in the prediction, diagnosis, and management of diabetes: A comprehensive review. *Diabetology & Metabolic Syndrome, 14*, 196. https://doi.org/10.1186/s13098-022-00969-9**  
    **Abstract**: Comprehensive review of 50+ ML/DL models for diabetes (T1D/T2D/GDM) prediction/management. Covers CGM-based prognosis (LSTM/RF for T1D-Hypo, RMSE <0.5 mmol/L), diagnosis (SVM on Pima, AUC >95%), and therapy (DL for IOB-optimierte Bolus). T1D-Fokus: 20% Studien mit CGM-only; DL übertrifft ML in Dynamik (z. B. +15% TIR). Challenges: Datenmangel; Empfehlung: Hybride Modelle für MDI, inkl. Wearables. Future: Federated Learning für Personalisierung.
 
-Diese Erweiterung macht die Liste handlungsorientiert – Abstracts sind prägnant und T1D-relevant. Für dein MVP: Nr. 4/5 bieten Modelle für Low-Handling (Woche 2), Nr. 1/2 Reviews für Benchmarking. Wenn du Volltexte oder Code-Extrakte brauchst, sag Bescheid!
+Modell:
+https://github.com/NeuroDiab/UVAPadovaAPI
+https://github.com/replicahealth/GluPredKit
+
+Anbindung an Juggluco:
+GlucoDataHandler
+Tasker
+
+
+
